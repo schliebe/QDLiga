@@ -59,4 +59,5 @@ target/
 
 # custom
 .idea/
+venv/
 *.lnk
