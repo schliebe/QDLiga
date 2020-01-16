@@ -36,8 +36,21 @@ class QDLiga:
         sys.exit()
         # TODO Skript läuft noch weiter?
 
-    def test(self, input):
-        return self.db.insert_player(input)
+    def register_new_player(self, username):
+        """Fügt einen neuen Spieler der Datenbank hinzu und gibt dessen P_ID
+        zurück"""
+        try:
+            p_id = self.db.insert_player(username)
+            return p_id
+        except BaseException as e:
+            raise e
+
+    def add_input_method(self, p_id, input_method, value):
+        """Fügt einem Spieler eine neue Eingabemethode hinzu"""
+        try:
+            self.db.add_input_method_to_player(p_id, input_method, value)
+        except BaseException as e:
+            raise e
 
 
 if __name__ == "__main__":

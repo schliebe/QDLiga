@@ -13,8 +13,9 @@ class DB:
         try:
             self.conn.close()
         except BaseException as e:
+            print('Fehler beim schließen der Datenbankverbindung!')
             print(e)
-            raise Exception('Fehler beim schließen der Verbindung.\n' + e)
+            raise e
 
     def insert_player(self, username):
         """Erstellt einen neuen DB-Eintrag mit dem Username und gibt die P_ID
@@ -37,5 +38,23 @@ class DB:
             self.conn.commit()
             return result[0][0]
         except BaseException as e:
+            print('Fehler beim Einfügen eines neuen Spielers')
             print(e)
-            raise Exception('Fehler beim einfügen eines neuen Spielers.\n' + e)
+            raise e
+
+    def add_input_method_to_player(self, p_id, input_method, value):
+        """Fügt vorhandenem Eintrag eine neue Eingabemethode hinzu."""
+        try:
+            # Eintrag in DB erweitern
+            cursor = self.conn.cursor()
+            command = '''
+                    UPDATE Player
+                    SET {} = ?
+                    WHERE P_ID = ?
+                    '''.format(input_method)
+            cursor.execute(command, (value, p_id))
+            self.conn.commit()
+        except BaseException as e:
+            print('Fehler beim hinzufügen einer Eingabemethode')
+            print(e)
+            raise e
