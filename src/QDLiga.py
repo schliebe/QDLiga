@@ -36,6 +36,9 @@ class QDLiga:
         sys.exit()
         # TODO Skript läuft noch weiter?
 
+    def test(self, input):
+        return self.db.insert_player(input)
+
 
 if __name__ == "__main__":
     QDLiga()

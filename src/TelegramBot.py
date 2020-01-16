@@ -21,6 +21,7 @@ class TelegramBot:
 
         # Bot starten
         self.updater.start_polling()
+        # self.updater.idle()  TODO Nötig? Dann in QDLiga als Thread aufrufen?
 
     def stop(self):
         # Lösung aus dem Forum
@@ -55,3 +56,9 @@ class TelegramBot:
         text = update.message.text
         print('{}: {}'.format(chat_id, text))
         context.bot.send_message(chat_id=chat_id, text=text)
+
+    def test(self, update, context):
+        chat_id = update.effective_chat.id
+        id = self.parent.test(chat_id)
+        context.bot.send_message(chat_id=chat_id, text='Du hast jetzt die ID '
+                                                       '{}'.format(id))
