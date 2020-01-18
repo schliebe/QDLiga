@@ -8,7 +8,10 @@ import threading
 
 
 class TelegramBot:
-    def __init__(self, parent):
+    def __init__(self, parent, log):
+        # Logger setzen
+        self.log = log
+
         # Verbindung zur QDLiga
         self.parent = parent
 
@@ -20,6 +23,10 @@ class TelegramBot:
 
         # Handler registrieren
         self.add_all_handler()
+
+        # Keyboards anlegen
+        self.keyboards = {}
+        self.create_keyboards()
 
         # Informationen für Nutzer werden hier zwischengespeichert
         self.user = {}
@@ -48,6 +55,14 @@ class TelegramBot:
         # self.dispatcher.add_handler(answer_handler)
         # ConversationHandler
         self.add_conversationhandler()
+
+    def create_keyboards(self):
+        # Speichert alle möglichen Keyboards, sodass diese nicht immer neu
+        # erstellt werden müssen
+        self.keyboards['yesno'] = [['Ja', 'Nein']]  # Ja/Nein
+        self.keyboards['main'] = [['Eintragen', 'Spielplan'],
+                                  ['Tabelle', 'Account'],
+                                  ['Support', 'Mehr']]  # Hauptmenü
 
     def add_conversationhandler(self):
         # Handler und Zustände für /register
@@ -91,10 +106,10 @@ class TelegramBot:
         # Wird mit /register aufgerufen
         # Startet die Conversation zum abfragen des Nutzernamen für die
         # Registrierung
-        yesno_keyboard = [['Ja', 'Nein']]
+        # Fragt durch Ja/Nein-Keyboard ob man sich registrieren möchte
         update.message.reply_text(
             'Möchtest du dich für die QDLiga registrieren?',
-            reply_markup=ReplyKeyboardMarkup(yesno_keyboard,
+            reply_markup=ReplyKeyboardMarkup(self.keyboards['yesno'],
                                              one_time_keyboard=True))
         return self.REGISTER_YESNO
 
@@ -115,7 +130,7 @@ class TelegramBot:
 
     def register_name(self, update, context):
         # Speichert den eingegebenen Nutzernamen ab
-        yesno_keyboard = [['Ja', 'Nein']]
+        # Fragt nach Bestätigung mit Ja/Nein Keyboard
         chat_id = update.effective_chat.id
         text = update.message.text
         if chat_id not in self.user:
@@ -123,7 +138,7 @@ class TelegramBot:
         self.user[chat_id]['username'] = text
         update.message.reply_text(
             'Ist der QD-Name "{}" richtig?'.format(text),
-            reply_markup=ReplyKeyboardMarkup(yesno_keyboard,
+            reply_markup=ReplyKeyboardMarkup(self.keyboards['yesno'],
                                              one_time_keyboard=True))
         return self.REGISTER_CONFIRM
 
@@ -137,6 +152,8 @@ class TelegramBot:
         if text == 'Ja':
             username = self.user[chat_id]['username']
             try:
+                # TODO check ob TelegramID bereits verwendet wird, damit User
+                # dann nicht angelegt wird
                 p_id = self.parent.register_new_player(username)
                 self.user[chat_id][p_id] = p_id
                 self.parent.add_input_method(p_id, 'TelegramID', chat_id)

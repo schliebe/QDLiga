@@ -1,21 +1,25 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from Logger import Logger
 from DB import DB
 from TelegramBot import TelegramBot
 
 
 class QDLiga:
     def __init__(self):
+        # Logger erstellen
+        self.log = Logger()
+
         # Alle Module mit entsprechenden Referenzen laden
         print('Starte QDLiga...')
 
         print('Verbindung zur Datenbank herstellen...')
-        self.db = DB()
+        self.db = DB(self.log)
         print('Verbindung zur Datenbank hergestellt!')
 
         print('Starte Telegram Bot...')
-        self.telegramBot = TelegramBot(self)
+        self.telegramBot = TelegramBot(self, self.log)
         print('Telegram Bot gestartet!')
 
         print('QDLiga gestartet!')

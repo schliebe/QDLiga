@@ -5,7 +5,10 @@ import sqlite3
 
 
 class DB:
-    def __init__(self):
+    def __init__(self, log):
+        # Logger setzen
+        self.log = log
+
         # Verbindung zur Datenbank
         self.conn = sqlite3.connect('../QDLiga.db', check_same_thread=False)
 
@@ -13,8 +16,8 @@ class DB:
         try:
             self.conn.close()
         except BaseException as e:
-            print('Fehler beim schließen der Datenbankverbindung!')
-            print(e)
+            self.log.log_error(
+                'Fehler beim schließen der Datenbankverbindung!', e)
             raise e
 
     def insert_player(self, username):
@@ -38,8 +41,7 @@ class DB:
             self.conn.commit()
             return result[0][0]
         except BaseException as e:
-            print('Fehler beim Einfügen eines neuen Spielers')
-            print(e)
+            self.log.log_error('Fehler beim Einfügen eines neuen Spielers', e)
             raise e
 
     def add_input_method_to_player(self, p_id, input_method, value):
@@ -55,6 +57,5 @@ class DB:
             cursor.execute(command, (value, p_id))
             self.conn.commit()
         except BaseException as e:
-            print('Fehler beim hinzufügen einer Eingabemethode')
-            print(e)
+            self.log.log_error('Fehler beim hinzufügen einer Eingabemethode', e)
             raise e
