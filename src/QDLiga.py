@@ -23,6 +23,9 @@ class QDLiga:
         print('Telegram Bot gestartet!')
 
         print('QDLiga gestartet!')
+        while True:
+            text = input()
+            self.console_input(text)
 
     def stop(self):
         print('QDLiga stoppen...')
@@ -39,6 +42,11 @@ class QDLiga:
         import sys
         sys.exit()
         # TODO Skript läuft noch weiter?
+
+    def console_input(self, text):
+        # Überprüft Konsoleneingabe auf bekannte Befehle
+        if text == '/stop':  # Beendet die QDLiga und alle dazugehörigen Module
+            self.stop()
 
     def register_new_player(self, username):
         """Fügt einen neuen Spieler der Datenbank hinzu und gibt dessen P_ID
