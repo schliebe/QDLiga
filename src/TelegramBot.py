@@ -35,14 +35,6 @@ class TelegramBot:
         self.updater.start_polling()
         # self.updater.idle()  TODO Nötig? Dann in QDLiga als Thread aufrufen?
 
-    def stop(self):
-        # Lösung aus dem Forum
-        # https://github.com/python-telegram-bot/python-telegram-bot/issues/801
-        def shutdown():
-            self.updater.stop()
-            self.updater.is_idle = False
-        threading.Thread(target=shutdown).start()
-
     def add_all_handler(self):
         # Handler registrieren
         # CommandHandler
@@ -50,9 +42,6 @@ class TelegramBot:
         self.dispatcher.add_handler(start_handler)
         cancel_handler = CommandHandler('cancel', self.cancel)
         self.dispatcher.add_handler(cancel_handler)
-        # MessageHandler
-        # answer_handler = MessageHandler(Filters.text, self.answer)
-        # self.dispatcher.add_handler(answer_handler)
         # ConversationHandler
         self.add_conversationhandler()
 
@@ -84,23 +73,45 @@ class TelegramBot:
         )
         self.dispatcher.add_handler(register_handler)
 
-    def start(self, update, context):
-        # Ausgeführt bei /start
+    def stop(self):
+        # Lösung aus dem Forum
+        # https://github.com/python-telegram-bot/python-telegram-bot/issues/801
+        def shutdown():
+            self.updater.stop()
+            self.updater.is_idle = False
+        threading.Thread(target=shutdown).start()
+
+    def cancel(self, update, context):
+        # Wird mit /cancel aufgerufen und bricht aktuelle Vorgänge ab
         chat_id = update.effective_chat.id
+        message = update.message.text
+        self.user_input(chat_id, message, check_user=True)
+        # Wenn /register abgebrochen wird:
+        self.user[chat_id].pop('register_username', None)
+
+        context.bot.send_message(chat_id=chat_id, text='Abgebrochen.')
+
+    def user_input(self, chat_id, message, check_user=False):
+        # Wird aufgerufen, wenn der User eine Eingabe tätigt
+        # Überprüft, dass ein Objekt des Nutzers vorhanden ist und legt
+        #  ansonsten eines an (nur wenn check_user=True)
+        # Loggt die Eingabe
+        # Aktualisiert den Timeout-Timer
+        if check_user and chat_id not in self.user:
+            self.user[chat_id] = {}
+        self.log.log_input('{}: {}'.format(chat_id, message))
+
+    def start(self, update, context):
+        # Ausgeführt bei /start, gibt Begrüßung zurück
+        chat_id = update.effective_chat.id
+        message = update.message.text
+        self.user_input(chat_id, message, check_user=True)
         text = 'Willkommen in der QDLiga!\n' \
                'Hier entsteht der Telegram-Bot um die QDLiga zu nutzen. ' \
                'Leider ist noch nicht alles fertig, also komm doch bitte ' \
                'bald wieder!\n' \
                'Du kannst dich aber schonmal mit /register registrieren!'
-        print('{}: /start'.format(chat_id))
-        context.bot.send_message(chat_id=chat_id, text=text)
-
-    def answer(self, update, context):
-        # TODO löschen, weil nicht gebraucht
-        chat_id = update.effective_chat.id
-        text = update.message.text
-        print('{}: {}'.format(chat_id, text))
-        context.bot.send_message(chat_id=chat_id, text=text)
+        update.message.reply_text(text)
 
     def register(self, update, context):
         # Wird mit /register aufgerufen
@@ -108,6 +119,8 @@ class TelegramBot:
         # Registrierung
         # Fragt durch Ja/Nein-Keyboard ob man sich registrieren möchte
         chat_id = update.effective_chat.id
+        message = update.message.text
+        self.user_input(chat_id, message, True)
         if self.parent.check_input_method_used('TelegramID', chat_id):
             update.message.reply_text(
                 ('Dein Telegram-Account wurde bereits registriert.\n'
@@ -124,8 +137,9 @@ class TelegramBot:
     def register_yesno(self, update, context):
         # Wertet die vorherige Antwort, ob sich der Nutzer registrieren will
         chat_id = update.effective_chat.id
-        text = update.message.text
-        if text == 'Ja':
+        message = update.message.text
+        self.user_input(chat_id, message)
+        if message == 'Ja':
             update.message.reply_text(
                 'Gib bitte deinen QD Nutzernamen ein!',
                 reply_markup=ReplyKeyboardRemove())
@@ -140,12 +154,11 @@ class TelegramBot:
         # Speichert den eingegebenen Nutzernamen ab
         # Fragt nach Bestätigung mit Ja/Nein Keyboard
         chat_id = update.effective_chat.id
-        text = update.message.text
-        if chat_id not in self.user:
-            self.user[chat_id] = {}
-        self.user[chat_id]['username'] = text
+        message = update.message.text
+        self.user_input(chat_id, message)
+        self.user[chat_id]['register_username'] = message
         update.message.reply_text(
-            'Ist der QD-Name "{}" richtig?'.format(text),
+            'Ist der QD-Name "{}" richtig?'.format(message),
             reply_markup=ReplyKeyboardMarkup(self.keyboards['yesno'],
                                              one_time_keyboard=True))
         return self.REGISTER_CONFIRM
@@ -156,15 +169,18 @@ class TelegramBot:
         # Schreibt den Nutzer und die TelegramID in die Datenbank
         # Gibt Fehlermeldungen zurück, falls nicht möglich
         chat_id = update.effective_chat.id
-        text = update.message.text
-        if text == 'Ja':
-            username = self.user[chat_id]['username']
+        message = update.message.text
+        self.user_input(chat_id, message)
+        if message == 'Ja':
+            username = self.user[chat_id]['register_username']
             try:
                 p_id = self.parent.register_new_player(username)
                 self.user[chat_id][p_id] = p_id
                 self.parent.add_input_method(p_id, 'TelegramID', chat_id)
                 text = ('Du wurdest erfolgreich als "{}" registriert!'
                         .format(username))
+                self.user[chat_id]['username'] = username
+                self.user[chat_id].pop('register_username', None)
             except BaseException as e:
                 # Sende angepasste Fehlernachricht, sofern Fehler bekannt
                 if str(e) == 'UNIQUE constraint failed: Player.TelegramID':
@@ -185,9 +201,3 @@ class TelegramBot:
                 'Versuch es einfach nochmal: /register',
                 reply_markup=ReplyKeyboardRemove())
             return self.REGISTER_END
-
-    def cancel(self, update, context):
-        # TODO implement
-        print('Cancel')
-        chat_id = update.effective_chat.id
-        context.bot.send_message(chat_id=chat_id, text='Abgebrochen')
