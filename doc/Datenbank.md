@@ -1,6 +1,6 @@
 # Datenbank
 Für die Datenbank wird SQLite verwendet.\
-Die Datenbank befindet sich im Hauptordner in der Datei 'QDLiga.md'
+Die Datenbank befindet sich im Hauptordner in der Datei 'QDLiga.db'
 
 ---
 ### Tabellen:
