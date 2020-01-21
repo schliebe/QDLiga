@@ -56,6 +56,13 @@ class QDLiga:
         except BaseException as e:
             raise e
 
+    def check_input_method_used(self, input_method, value):
+        """Überprüft, ob der Wert für die Eingabemethode schon verwendet wird"""
+        try:
+            return self.db.check_input_method_used(input_method, value)
+        except BaseException as e:
+            raise e
+
 
 if __name__ == "__main__":
     QDLiga()

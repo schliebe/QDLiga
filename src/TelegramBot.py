@@ -107,11 +107,19 @@ class TelegramBot:
         # Startet die Conversation zum abfragen des Nutzernamen für die
         # Registrierung
         # Fragt durch Ja/Nein-Keyboard ob man sich registrieren möchte
-        update.message.reply_text(
-            'Möchtest du dich für die QDLiga registrieren?',
-            reply_markup=ReplyKeyboardMarkup(self.keyboards['yesno'],
-                                             one_time_keyboard=True))
-        return self.REGISTER_YESNO
+        chat_id = update.effective_chat.id
+        if self.parent.check_input_method_used('TelegramID', chat_id):
+            update.message.reply_text(
+                ('Dein Telegram-Account wurde bereits registriert.\n'
+                 'Wenn du deinen Nutzernamen ändern willst, oder andere '
+                 'Probleme hast, melde dich bitte beim Support: /support'))
+            return self.REGISTER_END
+        else:
+            update.message.reply_text(
+                'Möchtest du dich für die QDLiga registrieren?',
+                reply_markup=ReplyKeyboardMarkup(self.keyboards['yesno'],
+                                                 one_time_keyboard=True))
+            return self.REGISTER_YESNO
 
     def register_yesno(self, update, context):
         # Wertet die vorherige Antwort, ob sich der Nutzer registrieren will
@@ -152,8 +160,6 @@ class TelegramBot:
         if text == 'Ja':
             username = self.user[chat_id]['username']
             try:
-                # TODO check ob TelegramID bereits verwendet wird, damit User
-                # dann nicht angelegt wird
                 p_id = self.parent.register_new_player(username)
                 self.user[chat_id][p_id] = p_id
                 self.parent.add_input_method(p_id, 'TelegramID', chat_id)

@@ -50,12 +50,31 @@ class DB:
             # Eintrag in DB erweitern
             cursor = self.conn.cursor()
             command = '''
-                    UPDATE Player
-                    SET {} = ?
-                    WHERE P_ID = ?
-                    '''.format(input_method)
+                UPDATE Player
+                SET {} = ?
+                WHERE P_ID = ?
+                '''.format(input_method)
             cursor.execute(command, (value, p_id))
             self.conn.commit()
         except BaseException as e:
             self.log.log_error('Fehler beim hinzufügen einer Eingabemethode', e)
+            raise e
+
+    def check_input_method_used(self, input_method, value):
+        """Überprüft, ob der Wert einer Eingabemethode bereits in der Datenbank
+        vergeben ist"""
+        try:
+            cursor = self.conn.cursor()
+            command = '''
+                SELECT *
+                FROM Player
+                WHERE {} = ?
+                '''.format(input_method)
+            cursor.execute(command, (value,))
+            if cursor.fetchone():  # Ist Ergebnis der Query None?
+                return True  # Eintrag vorhanden, Wert bereits verwendet
+            else:
+                return False  # Kein Eintrag, Wert also noch frei
+        except BaseException as e:
+            self.log.log_error('Fehler beim überprüfen der Eingabemethode', e)
             raise e
