@@ -40,10 +40,11 @@ class QDLiga:
 
         self.log.log_info('QDLiga wurde gestoppt!')
 
+        self.log.log_info('Bitte warten, bis alle Threads beendet wurden...')
+
         self.log.stop()
         import sys
         sys.exit()
-        # TODO Skript läuft noch weiter?
 
     def console_input(self, text):
         # Überprüft Konsoleneingabe auf bekannte Befehle

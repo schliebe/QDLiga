@@ -4,6 +4,7 @@
 from telegram import (ReplyKeyboardMarkup, ReplyKeyboardRemove)
 from telegram.ext import (Updater, CommandHandler, MessageHandler,
                           ConversationHandler, Filters)
+from TelegramTimer import TelegramTimer
 import threading
 
 
@@ -30,6 +31,10 @@ class TelegramBot:
 
         # Informationen für Nutzer werden hier zwischengespeichert
         self.user = {}
+
+        # Timer für Timeout wird gestartet
+        self.timer = TelegramTimer(self)
+        self.log.log_info('TelegramTimer gestartet!')
 
         # Bot starten
         self.updater.start_polling()
@@ -74,6 +79,9 @@ class TelegramBot:
         self.dispatcher.add_handler(register_handler)
 
     def stop(self):
+        # Timer beenden
+        self.timer.stop()
+
         # Lösung aus dem Forum
         # https://github.com/python-telegram-bot/python-telegram-bot/issues/801
         def shutdown():
@@ -98,8 +106,13 @@ class TelegramBot:
         # Loggt die Eingabe
         # Aktualisiert den Timeout-Timer
         if check_user and chat_id not in self.user:
-            self.user[chat_id] = {}
+            self.user[chat_id] = {}  # Legt Nutzerobjekt an, wenn nötig
+        self.timer.update(chat_id)  # Erneuert den Timestamp im Timer
         self.log.log_input('{}: {}'.format(chat_id, message))
+
+    def timeout(self, chat_id):
+        # TODO implement
+        pass
 
     def start(self, update, context):
         # Ausgeführt bei /start, gibt Begrüßung zurück
