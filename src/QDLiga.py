@@ -12,33 +12,35 @@ class QDLiga:
         self.log = Logger()
 
         # Alle Module mit entsprechenden Referenzen laden
-        print('Starte QDLiga...')
+        self.log.log_info('Starte QDLiga...')
 
-        print('Verbindung zur Datenbank herstellen...')
+        self.log.log_info('Verbindung zur Datenbank herstellen...')
         self.db = DB(self.log)
-        print('Verbindung zur Datenbank hergestellt!')
+        self.log.log_info('Verbindung zur Datenbank hergestellt!')
 
-        print('Starte Telegram Bot...')
+        self.log.log_info('Starte Telegram Bot...')
         self.telegramBot = TelegramBot(self, self.log)
-        print('Telegram Bot gestartet!')
+        self.log.log_info('Telegram Bot gestartet!')
 
-        print('QDLiga gestartet!')
+        self.log.log_info('QDLiga gestartet!')
         while True:
             text = input()
             self.console_input(text)
 
     def stop(self):
-        print('QDLiga stoppen...')
+        self.log.log_info('QDLiga stoppen...')
 
-        print('Schließe Verbindung zur Datenbank...')
+        self.log.log_info('Schließe Verbindung zur Datenbank...')
         self.db.stop()
-        print('Verbindung zur Datenbank geschlossen!')
+        self.log.log_info('Verbindung zur Datenbank geschlossen!')
 
-        print('Beende Telegram Bot...')
+        self.log.log_info('Beende Telegram Bot...')
         self.telegramBot.stop()
-        print('Telegram Bot beendet!')
+        self.log.log_info('Telegram Bot beendet!')
 
-        print('QDLiga wurde gestoppt!')
+        self.log.log_info('QDLiga wurde gestoppt!')
+
+        self.log.stop()
         import sys
         sys.exit()
         # TODO Skript läuft noch weiter?

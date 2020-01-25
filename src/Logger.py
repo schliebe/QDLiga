@@ -7,6 +7,11 @@ class Logger:
         self.filepath = filepath
         self.filename = filename
 
+    def stop(self):
+        # Sorgt dafür, dass alle Logs beim beenden korrekt abgespeichert werden
+        # TODO impelement
+        pass
+
     def log_notification(self, text, exception=None):
         # Log für wichtige Dinge, die den Admins mitgeteilt werden sollte
         print(text)
