@@ -9,7 +9,7 @@ import threading
 
 
 class TelegramBot:
-    def __init__(self, parent, log):
+    def __init__(self, parent, log, token):
         # Logger setzen
         self.log = log
 
@@ -18,7 +18,7 @@ class TelegramBot:
 
         # Bot-Attribute festlegen
         self.updater = Updater(
-            token='TOKEN',
+            token=token,
             use_context=True)
         self.dispatcher = self.updater.dispatcher
 

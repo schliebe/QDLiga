@@ -8,8 +8,21 @@ from TelegramBot import TelegramBot
 
 class QDLiga:
     def __init__(self):
+        def load_token():
+            # Lade Tokens aus Token.txt
+            tokens = {'Telegram_Bot_Token': ''}  # Default Werte
+            file = open('..\\Token.txt', 'r')
+            for line in file:
+                key, value = line.split('=', 1)
+                tokens[key] = value
+            file.close()
+            return tokens
+
         # Logger erstellen
         self.log = Logger()
+
+        # Tokens laden
+        token = load_token()
 
         # Alle Module mit entsprechenden Referenzen laden
         self.log.log_info('Starte QDLiga...')
@@ -19,7 +32,8 @@ class QDLiga:
         self.log.log_info('Verbindung zur Datenbank hergestellt!')
 
         self.log.log_info('Starte Telegram Bot...')
-        self.telegramBot = TelegramBot(self, self.log)
+        self.telegramBot = TelegramBot(self, self.log,
+                                       token['Telegram_Bot_Token'])
         self.log.log_info('Telegram Bot gestartet!')
 
         self.log.log_info('QDLiga gestartet!')
