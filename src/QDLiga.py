@@ -61,7 +61,7 @@ class QDLiga:
         sys.exit()
 
     def console_input(self, text):
-        # Überprüft Konsoleneingabe auf bekannte Befehle
+        """Überprüft Konsoleneingabe auf bekannte Befehle"""
         if text == '/stop':  # Beendet die QDLiga und alle dazugehörigen Module
             self.stop()
 

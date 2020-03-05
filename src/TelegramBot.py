@@ -22,6 +22,9 @@ class TelegramBot:
             use_context=True)
         self.dispatcher = self.updater.dispatcher
 
+        # Bezeichnung der Eingabemethode
+        self.INPUT_METHOD = 'TelegramID'
+
         # Handler registrieren
         self.add_all_handler()
 
@@ -43,12 +46,82 @@ class TelegramBot:
     def add_all_handler(self):
         # Handler registrieren
         # CommandHandler
-        start_handler = CommandHandler('start', self.start)
+        start_handler = CommandHandler('start', self.mainmenu)
         self.dispatcher.add_handler(start_handler)
-        cancel_handler = CommandHandler('cancel', self.cancel)
-        self.dispatcher.add_handler(cancel_handler)
         # ConversationHandler
         self.add_conversationhandler()
+
+    def add_conversationhandler(self):
+        # Nummern der Zustände
+        self.ACCOUNT = 400
+        self.REGISTER = 410
+        self.REGISTER_YESNO = 411
+        self.REGISTER_NAME = 412
+        self.REGISTER_CONFIRM = 413
+
+        # Menüs als Conversations. Im Hauptmenü können die verschiedenen Menüs
+        # aufgerufen werden (Ebene 1, E1). Deren Untermenüs (E2, ...) müssen
+        # jedoch zuerst implementiert werden, somit erfolgt die Reihenfolge von
+        # unten nach oben.
+        default_handler = ConversationHandler(
+            entry_points=[],
+            states={},
+            fallbacks=[CommandHandler('cancel', self.cancel)],
+            map_to_parent={}
+        )
+        go_back_handler = MessageHandler(Filters.regex('^(Zurück)$'),
+                                         self.go_back)  # Zurück ins Hauptmenü
+
+        # Menü: Eintragen (E1)
+        # TODO Implementieren
+
+        # Menü: Spielplan (E1)
+        # TODO Implementieren
+
+        # Menü: Tabelle (E1)
+        # TODO Implementieren
+
+        # Menü: Account
+        # Registrieren (E2)
+        register_handler = ConversationHandler(
+            entry_points=[MessageHandler(Filters.regex('^(Registrieren)$'),
+                                         self.register)],
+            states={
+                self.REGISTER_YESNO: [
+                    MessageHandler(Filters.regex('^(Ja|Nein)$'),
+                                   self.register_yesno)
+                ],
+                self.REGISTER_NAME: [
+                    MessageHandler(Filters.text, self.register_name)
+                ],
+                self.REGISTER_CONFIRM: [
+                    MessageHandler(Filters.regex('^(Ja|Nein)$'),
+                                   self.register_confirm)
+                ],
+            },
+            fallbacks=[CommandHandler('cancel', self.cancel)],
+            map_to_parent={
+                self.ACCOUNT: self.ACCOUNT,
+            }
+        )
+
+        # Account (E1)
+        account_handler = ConversationHandler(
+            entry_points=[MessageHandler(Filters.regex('^(Account)$'),
+                                         self.account)],
+            states={
+                self.ACCOUNT: [register_handler,
+                               go_back_handler],
+            },
+            fallbacks=[CommandHandler('cancel', self.cancel)]
+        )
+        self.dispatcher.add_handler(account_handler)
+
+        # Menü: Support (E1)
+        # TODO Implementieren
+
+        # Menü: Mehr (E1)
+        # TODO Implementieren
 
     def create_keyboards(self):
         # Speichert alle möglichen Keyboards, sodass diese nicht immer neu
@@ -57,26 +130,7 @@ class TelegramBot:
         self.keyboards['main'] = [['Eintragen', 'Spielplan'],
                                   ['Tabelle', 'Account'],
                                   ['Support', 'Mehr']]  # Hauptmenü
-
-    def add_conversationhandler(self):
-        # Handler und Zustände für /register
-        self.REGISTER_YESNO = 1
-        self.REGISTER_NAME = 2
-        self.REGISTER_CONFIRM = 3
-        self.REGISTER_END = ConversationHandler.END
-        register_handler = ConversationHandler(
-            entry_points=[CommandHandler('register', self.register)],
-            states={
-                self.REGISTER_YESNO: [MessageHandler(
-                    Filters.regex('^(Ja|Nein)$'), self.register_yesno)],
-                self.REGISTER_NAME: [MessageHandler(
-                    Filters.text, self.register_name)],
-                self.REGISTER_CONFIRM: [MessageHandler(
-                    Filters.regex('^(Ja|Nein)$'), self.register_confirm)]
-            },
-            fallbacks=[CommandHandler('cancel', self.cancel)]
-        )
-        self.dispatcher.add_handler(register_handler)
+        self.keyboards['account'] = [['Registrieren', 'Zurück']]  # Account
 
     def stop(self):
         # Timer beenden
@@ -96,8 +150,14 @@ class TelegramBot:
         self.user_input(chat_id, message, check_user=True)
         # Wenn /register abgebrochen wird:
         self.user[chat_id].pop('register_username', None)
+        update.message.reply_text('Abgebrochen.')
+        return ConversationHandler.END
 
-        context.bot.send_message(chat_id=chat_id, text='Abgebrochen.')
+    def go_back(self, update, context):
+        # Wird durch den Zurück-Button eines Untermenüs aufgerufen
+        # Geht ins Hauptmenü zurück
+        self.mainmenu(update, context)
+        return ConversationHandler.END
 
     def user_input(self, chat_id, message, check_user=False):
         # Wird aufgerufen, wenn der User eine Eingabe tätigt
@@ -114,23 +174,36 @@ class TelegramBot:
         # TODO implement
         pass
 
-    def start(self, update, context):
-        # Ausgeführt bei /start, gibt Begrüßung zurück
+    def mainmenu(self, update, context):
+        # Hauptmenü
+        # Aufgerufen mit /start
+        # Anzeigen der weiteren Menüpunkte
         chat_id = update.effective_chat.id
         message = update.message.text
         self.user_input(chat_id, message, check_user=True)
         text = 'Willkommen in der QDLiga!\n' \
-               'Hier entsteht der Telegram-Bot um die QDLiga zu nutzen. ' \
-               'Leider ist noch nicht alles fertig, also komm doch bitte ' \
-               'bald wieder!\n' \
-               'Du kannst dich aber schonmal mit /register registrieren!'
-        update.message.reply_text(text)
+               'Hier entsteht der Telegram-Bot um die QDLiga zu nutzen.\n' \
+               'Bisher kannst du dich schon im Menü "Account" registrieren!\n' \
+               'Komm bitte bald wieder, um den fertigen Bot zu nutzen!'
+        update.message.reply_text(
+            text, reply_markup=ReplyKeyboardMarkup(self.keyboards['main']))
+
+    def account(self, update, context):
+        # Menü für Account (E1)
+        # Aufgerufen mit /account oder über das Hauptmenü
+        # Leitet an Untermenüs weiter
+        chat_id = update.effective_chat.id
+        message = update.message.text
+        self.user_input(chat_id, message)
+        update.message.reply_text(
+            'Was möchtest du tun?',
+            reply_markup=ReplyKeyboardMarkup(self.keyboards['account']))
+        return self.ACCOUNT
 
     def register(self, update, context):
-        # Wird mit /register aufgerufen
-        # Startet die Conversation zum abfragen des Nutzernamen für die
-        # Registrierung
-        # Fragt durch Ja/Nein-Keyboard ob man sich registrieren möchte
+        # Menü für Registrieren (E2)
+        # Aufgerufen über das Account-Menü
+        # Abfragen des Nutzernamen für die Registrierung
         chat_id = update.effective_chat.id
         message = update.message.text
         self.user_input(chat_id, message, True)
@@ -138,8 +211,8 @@ class TelegramBot:
             update.message.reply_text(
                 ('Dein Telegram-Account wurde bereits registriert.\n'
                  'Wenn du deinen Nutzernamen ändern willst, oder andere '
-                 'Probleme hast, melde dich bitte beim Support: /support'))
-            return self.REGISTER_END
+                 'Probleme hast, melde dich bitte beim Support!'))
+            return self.account(update, context)  # Zurück zum Account-Menü
         else:
             update.message.reply_text(
                 'Möchtest du dich für die QDLiga registrieren?',
@@ -159,9 +232,8 @@ class TelegramBot:
             return self.REGISTER_NAME
         else:
             update.message.reply_text(
-                'Wenn du es dir anders überlegst, Gib einfach /register ein!',
-                reply_markup=ReplyKeyboardRemove())
-            return self.REGISTER_END
+                'Wenn du es dir anders überlegst, versuch es einfach nochmal!')
+            return self.account(update, context)  # Zurück zum Account-Menü
 
     def register_name(self, update, context):
         # Speichert den eingegebenen Nutzernamen ab
@@ -188,12 +260,13 @@ class TelegramBot:
             username = self.user[chat_id]['register_username']
             try:
                 p_id = self.parent.register_new_player(username)
-                self.user[chat_id][p_id] = p_id
-                self.parent.add_input_method(p_id, 'TelegramID', chat_id)
-                text = ('Du wurdest erfolgreich als "{}" registriert!'
-                        .format(username))
+                self.user[chat_id]['p_id'] = p_id
+                self.parent.add_input_method(p_id, self.INPUT_METHOD, chat_id)
+                update.message.reply_text(('Du wurdest erfolgreich als "{}" '
+                                           'registriert!'.format(username)))
                 self.user[chat_id]['username'] = username
                 self.user[chat_id].pop('register_username', None)
+                return self.account(update, context)  # Zurück zum Account-Menü
             except BaseException as e:
                 # Sende angepasste Fehlernachricht, sofern Fehler bekannt
                 if str(e) == 'UNIQUE constraint failed: Player.TelegramID':
@@ -202,15 +275,13 @@ class TelegramBot:
                 elif str(e) == 'UNIQUE constraint failed: Player.Username':
                     text = 'Dieser Nutzername wurde bereits registriert!'
                 else:
-                    text = ('Fehler beim registrieren. Bitte versuch es '
-                            'nochmal: /register')
-            update.message.reply_text(
-                text,
-                reply_markup=ReplyKeyboardRemove())
-            return self.REGISTER_END
+                    text = 'Fehler beim registrieren. Bitte versuch es nochmal!'
+                self.user[chat_id].pop('username', None)
+                self.user[chat_id].pop('register_username', None)
+                update.message.reply_text(text)
+                return self.account(update, context)  # Zurück zum Account-Menü
         else:
             self.user[chat_id].pop('username', None)
             update.message.reply_text(
-                'Versuch es einfach nochmal: /register',
-                reply_markup=ReplyKeyboardRemove())
-            return self.REGISTER_END
+                'Versuch es einfach nochmal!')
+            return self.account(update, context)  # Zurück zum Account-Menü
