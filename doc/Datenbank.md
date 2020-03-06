@@ -73,10 +73,10 @@ Diese Tabelle wird nur von SQLite verwendet und enthält die jeweils letzte mit 
 ---
 ### Erklärungen
 #### Teilnahmestatus
-| Status | Bedeutung                               |
-| ------ | --------------------------------------- |
-| 0      | Spieler nimmt nächste Saison nicht teil |
-| 1      | Spieler nimmt nächste Saison teil       |
+| Status | Bedeutung                                         |
+| ------ | ------------------------------------------------- |
+| 0      | Spieler nimmt nächste Saison nicht teil (Inaktiv) |
+| 1      | Spieler nimmt nächste Saison teil (Aktiv)         |
 
 #### Round
 | Runde | Bedeutung |

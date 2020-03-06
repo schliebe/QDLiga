@@ -58,6 +58,10 @@ class TelegramBot:
         self.REGISTER_YESNO = 411
         self.REGISTER_NAME = 412
         self.REGISTER_CONFIRM = 413
+        self.STATUS = 420
+        self.STATUS_YESNO = 421
+        self.STATUS_CHOOSE = 422
+        self.STATUS_CONFIRM = 423
 
         # Menüs als Conversations. Im Hauptmenü können die verschiedenen Menüs
         # aufgerufen werden (Ebene 1, E1). Deren Untermenüs (E2, ...) müssen
@@ -105,12 +109,37 @@ class TelegramBot:
             }
         )
 
+        # Status ändern (E2)
+        status_handler = ConversationHandler(
+            entry_points=[MessageHandler(Filters.regex('^(Status ändern)$'),
+                                         self.status)],
+            states={
+                self.STATUS_YESNO: [
+                    MessageHandler(Filters.regex('^(Ja|Nein)$'),
+                                   self.status_yesno)
+                ],
+                self.STATUS_CHOOSE: [
+                    MessageHandler(Filters.regex('^(Aktiv|Inaktiv)$'),
+                                   self.status_choose)
+                ],
+                self.STATUS_CONFIRM: [
+                    MessageHandler(Filters.regex('^(Ja|Nein)$'),
+                                   self.status_confirm)
+                ],
+            },
+            fallbacks=[CommandHandler('cancel', self.cancel)],
+            map_to_parent={
+                self.ACCOUNT: self.ACCOUNT,
+            }
+        )
+
         # Account (E1)
         account_handler = ConversationHandler(
             entry_points=[MessageHandler(Filters.regex('^(Account)$'),
                                          self.account)],
             states={
                 self.ACCOUNT: [register_handler,
+                               status_handler,
                                go_back_handler],
             },
             fallbacks=[CommandHandler('cancel', self.cancel)]
@@ -130,7 +159,9 @@ class TelegramBot:
         self.keyboards['main'] = [['Eintragen', 'Spielplan'],
                                   ['Tabelle', 'Account'],
                                   ['Support', 'Mehr']]  # Hauptmenü
-        self.keyboards['account'] = [['Registrieren', 'Zurück']]  # Account
+        self.keyboards['account'] = [['Registrieren', 'Status ändern'],
+                                     ['Zurück']]  # Account
+        self.keyboards['status'] = [['Aktiv', 'Inaktiv']]  # Status ändern
 
     def stop(self):
         # Timer beenden
@@ -284,4 +315,97 @@ class TelegramBot:
             self.user[chat_id].pop('username', None)
             update.message.reply_text(
                 'Versuch es einfach nochmal!')
+            return self.account(update, context)  # Zurück zum Account-Menü
+
+    def status(self, update, context):
+        # Menü für Status ändern (E2)
+        # Aufgerufen über das Account-Menü
+        # Ermöglicht das Ändern des Status
+        chat_id = update.effective_chat.id
+        message = update.message.text
+        self.user_input(chat_id, message, True)
+        try:
+            p_id = self.parent.get_p_id(self.INPUT_METHOD, chat_id)
+            if p_id:
+                self.user[chat_id]['p_id'] = p_id
+                status = self.parent.get_status(p_id)
+                self.user[chat_id]['status'] = status
+                if status == 0:  # Status 0 = Inaktiv
+                    status = 'Inaktiv'
+                elif status == 1:  # Status 1 = Aktiv
+                    status = 'Aktiv'
+                update.message.reply_text(
+                    ('Dein aktueller Status ist "{}", möchtest du deinen '
+                     'Status ändern?'.format(status)),
+                    reply_markup=ReplyKeyboardMarkup(self.keyboards['yesno']))
+                return self.STATUS_YESNO
+            else:
+                update.message.reply_text(
+                    ('Du musst dich zuerst registrieren, bevor du deinen '
+                     'Status ändern kannst!'))
+                return self.account(update, context)  # Zurück zum Account-Menü
+        except BaseException as e:
+            update.message.reply_text(
+                'Fehler beim Laden des Status. Bitte versuch es nochmal')
+            return self.account(update, context)  # Zurück zum Account-Menü
+
+    def status_yesno(self, update, context):
+        chat_id = update.effective_chat.id
+        message = update.message.text
+        self.user_input(chat_id, message)
+        if message == 'Ja':
+            update.message.reply_text(
+                'Auf was möchtest du deinen Status ändern?',
+                reply_markup=ReplyKeyboardMarkup(self.keyboards['status']))
+            return self.STATUS_CHOOSE
+        else:
+            update.message.reply_text(
+                'Du kannst den Status jederzeit ändern.')
+            return self.account(update, context)  # Zurück zum Account-Menü
+
+    def status_choose(self, update, context):
+        chat_id = update.effective_chat.id
+        message = update.message.text
+        self.user_input(chat_id, message)
+        if message == 'Aktiv':
+            status = 1
+        elif message == 'Inaktiv':
+            status = 0
+        else:
+            update.message.reply_text(('Ungültiger Status "{}". Bitte versuch '
+                                       'es nochmal'.format(message)))
+            return self.account(update, context)  # Zurück zum Account-Menü
+        if self.user[chat_id]['status'] == status:
+            update.message.reply_text(
+                'Der Status ist bereits "{}".'.format(message))
+            return self.account(update, context)  # Zurück zum Account-Menü
+        else:
+            self.user[chat_id]['status'] = status
+            update.message.reply_text(
+                'Status auf "{}" setzen?'.format(message),
+                reply_markup=ReplyKeyboardMarkup(self.keyboards['yesno']))
+            return self.STATUS_CONFIRM
+
+    def status_confirm(self, update, context):
+        chat_id = update.effective_chat.id
+        message = update.message.text
+        self.user_input(chat_id, message)
+        if message == 'Ja':
+            try:
+                p_id = self.user[chat_id]['p_id']
+                status = self.user[chat_id]['status']
+                self.parent.set_status(p_id, status)
+                update.message.reply_text(
+                    'Status wurde erfolgreich geändert!')
+                return self.account(update, context)  # Zurück zum Account-Menü
+            except BaseException as e:
+                print(str(e))
+                update.message.reply_text(
+                    'Fehler beim setzen des Status. Bitte versuch es nochmal!')
+                self.user[chat_id].pop('status', None)
+                return self.account(update, context)  # Zürück zum Account-Menü
+        else:
+            update.message.reply_text(
+                'Versuch es einfach nochmal!')
+            self.user[chat_id].pop('status', None)
             return self.account(update, context)  # Zurück zum Account-Menü

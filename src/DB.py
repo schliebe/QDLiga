@@ -20,6 +20,59 @@ class DB:
                 'Fehler beim schließen der Datenbankverbindung!', e)
             raise e
 
+    def get_p_id(self, input_method, value):
+        """Gibt die p_id eines Spielers anhand einer Eingabemethode zurück.
+        Gibt None zurück, wenn nicht vorhanden"""
+        try:
+            cursor = self.conn.cursor()
+            command = '''
+                SELECT P_ID
+                FROM Player
+                WHERE {} = ?
+                '''.format(input_method)
+            cursor.execute(command, (value,))
+            p_id = cursor.fetchone()
+            if p_id:
+                return p_id[0]  # p_id zurückgeben, falls forhanden
+            else:
+                return None  # None, sonst
+        except BaseException as e:
+            self.log.log_error('Fehler beim auslesen der p_id', e)
+            raise e
+
+    def get_status(self, p_id):
+        """Gibt den Status eines Spielers zurück"""
+        try:
+            cursor = self.conn.cursor()
+            command = '''
+                SELECT Status
+                FROM Player
+                WHERE P_ID = ?
+                '''
+            cursor.execute(command, (p_id,))
+            status = cursor.fetchone()
+            if status:
+                return status[0]
+            else:
+                raise BaseException('Status konnte nicht ausgelesen werden.')
+        except BaseException as e:
+            self.log.log_error('Fehler beim auslesen des Status', e)
+
+    def set_status(self, p_id, status):
+        """Setzt den Status eines Spielers"""
+        try:
+            cursor = self.conn.cursor()
+            command = '''
+                UPDATE Player
+                SET Status = ?
+                WHERE P_ID = ?
+                '''
+            cursor.execute(command, (status, p_id))
+            self.conn.commit()
+        except BaseException as e:
+            self.log.log_error('Fehler beim setzen des Status', e)
+            raise e
+
     def insert_player(self, username):
         """Erstellt einen neuen DB-Eintrag mit dem Username und gibt die P_ID
         zurück."""
