@@ -4,7 +4,6 @@
 from telegram import (ReplyKeyboardMarkup, ReplyKeyboardRemove)
 from telegram.ext import (Updater, CommandHandler, MessageHandler,
                           ConversationHandler, Filters)
-from TelegramTimer import TelegramTimer
 import threading
 
 
@@ -25,6 +24,9 @@ class TelegramBot:
         # Bezeichnung der Eingabemethode
         self.INPUT_METHOD = 'TelegramID'
 
+        # Timeout-Zeit festlegen
+        self.TIMEOUT_TIME = 600  # Timeout in Sekunden (10 Minuten)
+
         # Handler registrieren
         self.add_all_handler()
 
@@ -34,10 +36,6 @@ class TelegramBot:
 
         # Informationen für Nutzer werden hier zwischengespeichert
         self.user = {}
-
-        # Timer für Timeout wird gestartet
-        self.timer = TelegramTimer(self)
-        self.log.log_info('TelegramTimer gestartet!')
 
         # Bot starten
         self.updater.start_polling()
@@ -62,6 +60,8 @@ class TelegramBot:
         self.STATUS_YESNO = 421
         self.STATUS_CHOOSE = 422
         self.STATUS_CONFIRM = 423
+
+        self.TIMEOUT = ConversationHandler.TIMEOUT
 
         # Menüs als Conversations. Im Hauptmenü können die verschiedenen Menüs
         # aufgerufen werden (Ebene 1, E1). Deren Untermenüs (E2, ...) müssen
@@ -106,7 +106,10 @@ class TelegramBot:
             fallbacks=[CommandHandler('cancel', self.cancel)],
             map_to_parent={
                 self.ACCOUNT: self.ACCOUNT,
-            }
+                self.TIMEOUT: self.ACCOUNT,
+                ConversationHandler.END: ConversationHandler.END,
+            },
+            conversation_timeout=self.TIMEOUT_TIME
         )
 
         # Status ändern (E2)
@@ -130,7 +133,9 @@ class TelegramBot:
             fallbacks=[CommandHandler('cancel', self.cancel)],
             map_to_parent={
                 self.ACCOUNT: self.ACCOUNT,
-            }
+                ConversationHandler.END: ConversationHandler.END,
+            },
+            conversation_timeout=self.TIMEOUT_TIME
         )
 
         # Account (E1)
@@ -141,8 +146,12 @@ class TelegramBot:
                 self.ACCOUNT: [register_handler,
                                status_handler,
                                go_back_handler],
+                self.TIMEOUT: [
+                    MessageHandler(None, self.timeout)
+                ],
             },
-            fallbacks=[CommandHandler('cancel', self.cancel)]
+            fallbacks=[CommandHandler('cancel', self.cancel)],
+            conversation_timeout=self.TIMEOUT_TIME
         )
         self.dispatcher.add_handler(account_handler)
 
@@ -164,9 +173,6 @@ class TelegramBot:
         self.keyboards['status'] = [['Aktiv', 'Inaktiv']]  # Status ändern
 
     def stop(self):
-        # Timer beenden
-        self.timer.stop()
-
         # Lösung aus dem Forum
         # https://github.com/python-telegram-bot/python-telegram-bot/issues/801
         def shutdown():
@@ -174,14 +180,31 @@ class TelegramBot:
             self.updater.is_idle = False
         threading.Thread(target=shutdown).start()
 
+    def cleanup(self, update, context, text):
+        # Löscht die zwischengespeicherten Daten eines Users, beim Abbrechen
+        # durch /cancel, beim Timeout oder beim Beenden des Bot.
+        # Führt zurück ins Hauptmenü
+        chat_id = update.effective_chat.id
+        self.user.pop(chat_id, None)
+        update.message.reply_text(text)
+        self.mainmenu(update, context)
+
     def cancel(self, update, context):
-        # Wird mit /cancel aufgerufen und bricht aktuelle Vorgänge ab
+        # Wird mit /cancel aufgerufen
+        # Bricht den aktuellen Vorgang ab und führt zurück ins Hauptmenü
         chat_id = update.effective_chat.id
         message = update.message.text
         self.user_input(chat_id, message, check_user=True)
-        # Wenn /register abgebrochen wird:
-        self.user[chat_id].pop('register_username', None)
-        update.message.reply_text('Abgebrochen.')
+        self.cleanup(update, context, 'Abgebrochen.')
+        return ConversationHandler.END
+
+    def timeout(self, update, context):
+        # Wird durch Timeout im ConversationHandler ausgelöst
+        # Bricht den aktuellen Vorgang ab und führt zurück ins Hauptmenü
+        chat_id = update.effective_chat.id
+        message = update.message.text
+        self.cleanup(update, context, ('Das hat etwas zu lange gedauert. '
+                                       'Versuch es einfach nochmal!'))
         return ConversationHandler.END
 
     def go_back(self, update, context):
@@ -198,12 +221,7 @@ class TelegramBot:
         # Aktualisiert den Timeout-Timer
         if check_user and chat_id not in self.user:
             self.user[chat_id] = {}  # Legt Nutzerobjekt an, wenn nötig
-        self.timer.update(chat_id)  # Erneuert den Timestamp im Timer
         self.log.log_input('{}: {}'.format(chat_id, message))
-
-    def timeout(self, chat_id):
-        # TODO implement
-        pass
 
     def mainmenu(self, update, context):
         # Hauptmenü
@@ -211,7 +229,7 @@ class TelegramBot:
         # Anzeigen der weiteren Menüpunkte
         chat_id = update.effective_chat.id
         message = update.message.text
-        self.user_input(chat_id, message, check_user=True)
+        # self.user_input(chat_id, message, check_user=True)
         text = 'Willkommen in der QDLiga!\n' \
                'Hier entsteht der Telegram-Bot um die QDLiga zu nutzen.\n' \
                'Bisher kannst du dich schon im Menü "Account" registrieren!\n' \
@@ -219,13 +237,14 @@ class TelegramBot:
         update.message.reply_text(
             text, reply_markup=ReplyKeyboardMarkup(self.keyboards['main']))
 
-    def account(self, update, context):
+    def account(self, update, context, log_input=True):
         # Menü für Account (E1)
         # Aufgerufen mit /account oder über das Hauptmenü
         # Leitet an Untermenüs weiter
         chat_id = update.effective_chat.id
         message = update.message.text
-        self.user_input(chat_id, message)
+        if log_input:
+            self.user_input(chat_id, message)
         update.message.reply_text(
             'Was möchtest du tun?',
             reply_markup=ReplyKeyboardMarkup(self.keyboards['account']))
@@ -243,7 +262,7 @@ class TelegramBot:
                 ('Dein Telegram-Account wurde bereits registriert.\n'
                  'Wenn du deinen Nutzernamen ändern willst, oder andere '
                  'Probleme hast, melde dich bitte beim Support!'))
-            return self.account(update, context)  # Zurück zum Account-Menü
+            return self.account(update, context, False)  # Zurück zum Account-Menü
         else:
             update.message.reply_text(
                 'Möchtest du dich für die QDLiga registrieren?',
@@ -264,7 +283,7 @@ class TelegramBot:
         else:
             update.message.reply_text(
                 'Wenn du es dir anders überlegst, versuch es einfach nochmal!')
-            return self.account(update, context)  # Zurück zum Account-Menü
+            return self.account(update, context, False)  # Zurück zum Account-Menü
 
     def register_name(self, update, context):
         # Speichert den eingegebenen Nutzernamen ab
@@ -297,7 +316,7 @@ class TelegramBot:
                                            'registriert!'.format(username)))
                 self.user[chat_id]['username'] = username
                 self.user[chat_id].pop('register_username', None)
-                return self.account(update, context)  # Zurück zum Account-Menü
+                return self.account(update, context, False)  # Zurück zum Account-Menü
             except BaseException as e:
                 # Sende angepasste Fehlernachricht, sofern Fehler bekannt
                 if str(e) == 'UNIQUE constraint failed: Player.TelegramID':
@@ -310,12 +329,12 @@ class TelegramBot:
                 self.user[chat_id].pop('username', None)
                 self.user[chat_id].pop('register_username', None)
                 update.message.reply_text(text)
-                return self.account(update, context)  # Zurück zum Account-Menü
+                return self.account(update, context, False)  # Zurück zum Account-Menü
         else:
             self.user[chat_id].pop('username', None)
             update.message.reply_text(
                 'Versuch es einfach nochmal!')
-            return self.account(update, context)  # Zurück zum Account-Menü
+            return self.account(update, context, False)  # Zurück zum Account-Menü
 
     def status(self, update, context):
         # Menü für Status ändern (E2)
@@ -343,11 +362,11 @@ class TelegramBot:
                 update.message.reply_text(
                     ('Du musst dich zuerst registrieren, bevor du deinen '
                      'Status ändern kannst!'))
-                return self.account(update, context)  # Zurück zum Account-Menü
+                return self.account(update, context, False)  # Zurück zum Account-Menü
         except BaseException as e:
             update.message.reply_text(
                 'Fehler beim Laden des Status. Bitte versuch es nochmal')
-            return self.account(update, context)  # Zurück zum Account-Menü
+            return self.account(update, context, False)  # Zurück zum Account-Menü
 
     def status_yesno(self, update, context):
         chat_id = update.effective_chat.id
@@ -361,7 +380,7 @@ class TelegramBot:
         else:
             update.message.reply_text(
                 'Du kannst den Status jederzeit ändern.')
-            return self.account(update, context)  # Zurück zum Account-Menü
+            return self.account(update, context, False)  # Zurück zum Account-Menü
 
     def status_choose(self, update, context):
         chat_id = update.effective_chat.id
@@ -374,11 +393,11 @@ class TelegramBot:
         else:
             update.message.reply_text(('Ungültiger Status "{}". Bitte versuch '
                                        'es nochmal'.format(message)))
-            return self.account(update, context)  # Zurück zum Account-Menü
+            return self.account(update, context, False)  # Zurück zum Account-Menü
         if self.user[chat_id]['status'] == status:
             update.message.reply_text(
                 'Der Status ist bereits "{}".'.format(message))
-            return self.account(update, context)  # Zurück zum Account-Menü
+            return self.account(update, context, False)  # Zurück zum Account-Menü
         else:
             self.user[chat_id]['status'] = status
             update.message.reply_text(
@@ -397,7 +416,7 @@ class TelegramBot:
                 self.parent.set_status(p_id, status)
                 update.message.reply_text(
                     'Status wurde erfolgreich geändert!')
-                return self.account(update, context)  # Zurück zum Account-Menü
+                return self.account(update, context, False)  # Zurück zum Account-Menü
             except BaseException as e:
                 print(str(e))
                 update.message.reply_text(
@@ -408,4 +427,4 @@ class TelegramBot:
             update.message.reply_text(
                 'Versuch es einfach nochmal!')
             self.user[chat_id].pop('status', None)
-            return self.account(update, context)  # Zurück zum Account-Menü
+            return self.account(update, context, False)  # Zurück zum Account-Menü
