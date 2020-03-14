@@ -344,7 +344,7 @@ class TelegramBot:
         message = update.message.text
         self.user_input(chat_id, message, True)
         try:
-            p_id = self.parent.get_p_id(self.INPUT_METHOD, chat_id)
+            p_id = self.parent.get_p_id_from_input(self.INPUT_METHOD, chat_id)
             if p_id:
                 self.user[chat_id]['p_id'] = p_id
                 status = self.parent.get_status(p_id)

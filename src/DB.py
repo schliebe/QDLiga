@@ -49,7 +49,27 @@ class DB:
             self.log.log_error('Fehler beim speichern der Saison und Runde', e)
             raise e
 
-    def get_p_id(self, input_method, value):
+    def get_p_id(self, username):
+        """Gibt die p_id eines Spielers anhand des Nutzernamen zurück.
+        Gibt None zurück, wenn nicht vorhanden"""
+        try:
+            cursor = self.conn.cursor()
+            command = '''
+                SELECT P_ID
+                FROM Player
+                WHERE Username = ?
+                '''
+            cursor.execute(command, (username,))
+            p_id = cursor.fetchone()
+            if p_id:
+                return p_id[0]  # p_id zurückgeben, falls forhanden
+            else:
+                return None  # None, sonst
+        except BaseException as e:
+            self.log.log_error('Fehler beim auslesen der p_id', e)
+            raise e
+
+    def get_p_id_from_input(self, input_method, value):
         """Gibt die p_id eines Spielers anhand einer Eingabemethode zurück.
         Gibt None zurück, wenn nicht vorhanden"""
         try:

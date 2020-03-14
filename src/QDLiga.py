@@ -70,11 +70,20 @@ class QDLiga:
         if text == '/stop':  # Beendet die QDLiga und alle dazugehörigen Module
             self.stop()
 
-    def get_p_id(self, input_method, value):
+    def get_p_id(self, username):
+        """Lädt die ID eines Spielers anhand des Nutzernamens aus der
+        Datenbank"""
+        try:
+            p_id = self.db.get_p_id(username)
+            return p_id
+        except BaseException as e:
+            raise e
+
+    def get_p_id_from_input(self, input_method, value):
         """Lädt die ID eines Spielers anhand einer Eingabemethode aus der
         Datenbank"""
         try:
-            p_id = self.db.get_p_id(input_method, value)
+            p_id = self.db.get_p_id_from_input(input_method, value)
             return p_id
         except BaseException as e:
             raise e
