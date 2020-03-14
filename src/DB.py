@@ -20,6 +20,35 @@ class DB:
                 'Fehler beim schließen der Datenbankverbindung!', e)
             raise e
 
+    def load_time_settings(self):
+        """Gibt die aktuelle Saison und Runde aus der Datebank zurück"""
+        try:
+            cursor = self.conn.cursor()
+            command = '''
+                SELECT Season, Round
+                FROM Settings
+                '''
+            cursor.execute(command)
+            season, round = cursor.fetchone()
+            return season, round
+        except BaseException as e:
+            self.log.log_error('Fehler beim laden der Saison und Runde', e)
+            raise e
+
+    def set_time_settings(self, season, round):
+        """Schreibt die aktuelle Saison und Runde in die Datenbank.
+        Verändert den einzigen Eintrag der Einstellungs-Tabelle"""
+        try:
+            cursor = self.conn.cursor()
+            command = '''
+                UPDATE Settings
+                SET Season = ?, Round = ?'''
+            cursor.execute(command, (season, round))
+            self.conn.commit()
+        except BaseException as e:
+            self.log.log_error('Fehler beim speichern der Saison und Runde', e)
+            raise e
+
     def get_p_id(self, input_method, value):
         """Gibt die p_id eines Spielers anhand einer Eingabemethode zurück.
         Gibt None zurück, wenn nicht vorhanden"""

@@ -31,6 +31,11 @@ class QDLiga:
         self.db = DB(self.log)
         self.log.log_info('Verbindung zur Datenbank hergestellt!')
 
+        # Aktuelle Saison und Runde laden
+        self.season, self.round = self.db.load_time_settings()
+        self.log.log_info('Saison: {}, Runde {}'
+                          .format(self.season, self.round))
+
         self.log.log_info('Starte Telegram Bot...')
         self.telegramBot = TelegramBot(self, self.log,
                                        token['Telegram_Bot_Token'])
