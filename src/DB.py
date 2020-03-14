@@ -113,6 +113,7 @@ class DB:
             VALUES (?, 0)
             '''
             cursor.execute(command, (username,))
+            self.conn.commit()
 
             # P_ID herausfinden und zurückgeben
             command = '''
@@ -120,7 +121,6 @@ class DB:
             '''
             cursor.execute(command, (username,))
             result = cursor.fetchall()
-            self.conn.commit()
             return result[0][0]
         except BaseException as e:
             self.log.log_error('Fehler beim Einfügen eines neuen Spielers', e)
@@ -159,4 +159,85 @@ class DB:
                 return False  # Kein Eintrag, Wert also noch frei
         except BaseException as e:
             self.log.log_error('Fehler beim überprüfen der Eingabemethode', e)
+            raise e
+
+    def is_in_queue(self, p_id):
+        """Überprüft ob sich der Speiler mit der übergebenen ID in der
+        Warteliste befindet (True), oder nicht (False).
+
+        Die Warteliste wird als Liga mit L_ID 0 in der Datenbank gespeichert"""
+        try:
+            cursor = self.conn.cursor()
+            command = '''
+                SELECT *
+                FROM InLeague
+                WHERE Player = ? AND League = 0'''
+            cursor.execute(command, (p_id,))
+            if cursor.fetchone():  # Wenn Ergebnis nicht leer, Spieler auf Liste
+                return True
+            else:
+                return False
+        except BaseException as e:
+            self.log.log_error('Fehler beim überprüfen der Warteliste', e)
+            raise e
+
+    def is_in_league(self, p_id, season):
+        """Überprüft ob der Spieler mit der übergebenen ID in der angegebenen
+        Saison in einer Liga gespielt hat"""
+        try:
+            cursor = self.conn.cursor()
+            command = '''
+                SELECT *
+                FROM InLeague
+                WHERE Player = ?
+                 AND League IN (SELECT L_ID
+                                FROM League
+                                WHERE Season = ?)'''
+            cursor.execute(command, (p_id, season))
+            if cursor.fetchone():  # Wenn Ergebnis nicht leer, Spieler in Liga
+                return True
+            else:
+                return False
+        except BaseException as e:
+            self.log.log_error('Fehler beim überprüfen der Ligazugehörigkeit',
+                               e)
+            raise e
+
+    def add_to_league(self, l_id, p_id):
+        """Fügt einen Spieler einer Liga hinzu.
+        Erhöht den Spieler-Zähler der Liga"""
+        try:
+            cursor = self.conn.cursor()
+            command = '''
+                INSERT INTO InLeague (League, Player)
+                VALUES (?, ?)
+                '''
+            cursor.execute(command, (l_id, p_id))
+            self.conn.commit()
+        except BaseException as e:
+            self.log.log_error('Fehler beim hinzufügen zur Liga', e)
+            raise e
+
+    def add_to_queue(self, p_id):
+        """Fügt einen Spieler der Warteliste hinzu.
+        Die Warteliste ist eine Liga mit der L_ID 0"""
+        try:
+            self.add_to_league(0, p_id)
+        except BaseException as e:
+            self.log.log_error('Fehler beim hinzufügen zur Warteliste', e)
+            raise e
+
+    def remove_from_queue(self, p_id):
+        """Entfernt einen Spieler von der Warteliste.
+        Die Warteliste ist eine Liga mit der L_ID 0"""
+        try:
+            cursor = self.conn.cursor()
+            command = '''
+                DELETE FROM InLeague
+                WHERE League = 0 AND Player = ?
+                '''
+            cursor.execute(command, (p_id,))
+            self.conn.commit()
+        except BaseException as e:
+            self.log.log_error('Fehler beim entfernen von Warteliste', e)
             raise e

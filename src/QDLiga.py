@@ -88,9 +88,32 @@ class QDLiga:
             raise e
 
     def set_status(self, p_id, status):
-        """Setzt den Status eines Spielers in der Datenbank"""
+        """Setzt den Status eines Spielers in der Datenbank.
+
+        status: 0 = Inaktiv, 1 = Aktiv
+
+        1) Wird der Status auf Aktiv gesetzt, wird der Spieler der Warteliste
+        hinzugefügt, wenn er aktuell in keiner Liga spielt.
+        2) Wird der Status auf Inaktiv gesetzt, wird der Spieler von der
+        Warteliste entfernt, sofern er sich auf dieser befindet. Spielt er
+        aktuell in einer Liga, wird er am Ende der aktuellen Saison nicht mehr
+        neu eingeteilt.
+
+        Das ändern des Status kann ohne Konsequenzen geändert werden, sofern der
+        Spieler gerade in einer Liga spielt. Befindet er sich auf der
+        Warteliste, verliert er seine aktuelle Position, wenn er den Status auf
+        Inaktiv ändert."""
         try:
+            in_queue = self.db.is_in_queue(p_id)
+            in_league = self.db.is_in_league(p_id, self.season)
             self.db.set_status(p_id, status)
+            if status == 0:
+                if in_queue:
+                    self.db.remove_from_queue(p_id)
+            elif status == 1:
+                if not in_league:
+                    if not in_queue:
+                        self.db.add_to_queue(p_id)
         except BaseException as e:
             raise e
 
