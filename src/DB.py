@@ -233,6 +233,12 @@ class DB:
                 VALUES (?, ?)
                 '''
             cursor.execute(command, (l_id, p_id))
+            command = '''
+                UPDATE League
+                SET Players = Players + 1
+                WHERE L_ID = ?
+                '''
+            cursor.execute(command, (l_id,))
             self.conn.commit()
         except BaseException as e:
             self.log.log_error('Fehler beim hinzufügen zur Liga', e)
@@ -249,7 +255,8 @@ class DB:
 
     def remove_from_queue(self, p_id):
         """Entfernt einen Spieler von der Warteliste.
-        Die Warteliste ist eine Liga mit der L_ID 0"""
+        Die Warteliste ist eine Liga mit der L_ID 0.
+        Spieler-Zähler der Warteliste um 1 verringern"""
         try:
             cursor = self.conn.cursor()
             command = '''
@@ -257,7 +264,44 @@ class DB:
                 WHERE League = 0 AND Player = ?
                 '''
             cursor.execute(command, (p_id,))
+            command = '''
+                            UPDATE League
+                            SET Players = Players - 1
+                            WHERE L_ID = 0
+                            '''
+            cursor.execute(command)
             self.conn.commit()
         except BaseException as e:
             self.log.log_error('Fehler beim entfernen von Warteliste', e)
             raise e
+
+    def create_league(self, name, season):
+        """Legt eine neue Liga in der Datenbank an und gibt die L_ID zurück"""
+        try:
+            # Liga in Datenbank anlegen
+            cursor = self.conn.cursor()
+            command = '''
+                INSERT INTO League (Name, Season)
+                VALUES (?, ?)
+                '''
+            cursor.execute(command, (name, season))
+            self.conn.commit()
+
+            return self.get_l_id(name, season)
+        except BaseException as e:
+            self.log.log_error('Fehler beim anlegen der Liga', e)
+            raise e
+
+    def get_l_id(self, name, season):
+        cursor = self.conn.cursor()
+        command = '''
+            SELECT L_ID
+            FROM League
+            WHERE Name = ? AND Season = ?
+            '''
+        cursor.execute(command, (name, season))
+        l_id = cursor.fetchone()
+        if l_id:
+            return l_id[0]  # l_id zurückgeben, falls forhanden
+        else:
+            return None  # None, sonst
