@@ -60,11 +60,12 @@ Diese Tabelle enthält genau einen Eintrag mit den aktuellen Einstellungen des B
 > Keines der Felder darf NULL sein
 
 ---
-### TimeEvents
-Diese Tabelle enthällt die Events, die zu einem bestimmten Zeitpunkt vom QDTimer ausgeführt werden sollen\
-`Timestamp` Zeitstempel wann das Event stattfinden soll (Systemzeit in ms)\
-`Event` Die Art des Events das stattfinden soll (→ [Event](#event "Event"))
+### Events
+Diese Tabelle enthällt die Events, die zu einem bestimmten Zeitpunkt vom EventTimer ausgeführt werden sollen\
+`Timestamp` Zeitstempel wann das Event stattfinden soll (in UTC)\
+`Event` Das Event das stattfinden soll (→ [Event](#event "Event"))
 > Keines der Felder darf NULL sein
+> Jedes Event darf nur einmal vorhanden sein
 
 ---
 ### sqlite_sequence
@@ -96,7 +97,6 @@ Diese Tabelle wird nur von SQLite verwendet und enthält die jeweils letzte mit 
 | 5        | Sp1 hat ein anderes Ergebnis als zuvor Sp2 eingetragen |
 
 #### Event
-TODO: Neuer Link
-[Die verschiedenen Werte von Event können hier nachgelesen werden](/Doc/QDTimer.md#EventType "QDTimer/EventType")
+[Die verschiedenen Werte von Event können hier nachgelesen werden](/doc/EventTimer.md#Events "EventTimer/Events")
 
 ---
