@@ -122,6 +122,38 @@ class DB:
             self.log.log_error('Fehler beim setzen des Status', e)
             raise e
 
+    def get_l_id(self, name, season):
+        cursor = self.conn.cursor()
+        command = '''
+            SELECT L_ID
+            FROM League
+            WHERE Name = ? AND Season = ?
+            '''
+        cursor.execute(command, (name, season))
+        l_id = cursor.fetchone()
+        if l_id:
+            return l_id[0]  # l_id zurückgeben, falls forhanden
+        else:
+            return None  # None, sonst
+
+    def get_event_list(self):
+        """Gibt eine Liste aller Einträge aus der Tabelle Events zurück.
+        Die einzelnen Einträge sind Tupel der Form: (Timestamp, Event)."""
+        try:
+            event_list = []
+            cursor = self.conn.cursor()
+            command = '''
+                SELECT *
+                FROM Events
+                '''
+            cursor.execute(command)
+            data = cursor.fetchall()
+            for row in data:
+                event_list.append(row)
+            return event_list
+        except BaseException as e:
+            self.log.log_error('Fehler beim Auslesen der Events', e)
+
     def insert_player(self, username):
         """Erstellt einen neuen DB-Eintrag mit dem Username und gibt die P_ID
         zurück."""
@@ -265,10 +297,10 @@ class DB:
                 '''
             cursor.execute(command, (p_id,))
             command = '''
-                            UPDATE League
-                            SET Players = Players - 1
-                            WHERE L_ID = 0
-                            '''
+                UPDATE League
+                SET Players = Players - 1
+                WHERE L_ID = 0
+                '''
             cursor.execute(command)
             self.conn.commit()
         except BaseException as e:
@@ -292,16 +324,24 @@ class DB:
             self.log.log_error('Fehler beim anlegen der Liga', e)
             raise e
 
-    def get_l_id(self, name, season):
-        cursor = self.conn.cursor()
-        command = '''
-            SELECT L_ID
-            FROM League
-            WHERE Name = ? AND Season = ?
-            '''
-        cursor.execute(command, (name, season))
-        l_id = cursor.fetchone()
-        if l_id:
-            return l_id[0]  # l_id zurückgeben, falls forhanden
-        else:
-            return None  # None, sonst
+    def replace_event(self, old_time, event, new_time=None):
+        """Löscht das übergebene Event aus der Datenbank und legt einen neuen
+        Eintrag mit neuem Timestamp an, sofern ein Wert übergeben wird.
+        Der alte, sowie der neue Timestamp müssen bereits korrekt formatiert
+        und in utc umgerechnet sein"""
+        try:
+            # Eintrag aus der BD entfernen, sofern vorhanden
+            cursor = self.conn.cursor()
+            command = '''
+                DELETE FROM Events
+                WHERE Timestamp = ? AND Event = ?
+                '''
+            cursor.execute(command, (old_time, event))
+            if new_time:
+                command = '''
+                    INSERT INTO Events (Timestamp, Event)
+                    VALUES (?, ?)'''
+                cursor.execute(command, (new_time, event))
+            self.conn.commit()
+        except BaseException as e:
+            self.log.log_error('Fehler beim erneuern eines Events in der DB', e)

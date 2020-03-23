@@ -4,6 +4,7 @@
 from Logger import Logger
 from DB import DB
 from TelegramBot import TelegramBot
+from EventTimer import EventTimer
 
 
 class QDLiga:
@@ -41,6 +42,10 @@ class QDLiga:
                                        token['Telegram_Bot_Token'])
         self.log.log_info('Telegram Bot gestartet!')
 
+        self.log.log_info('Starte EventTimer...')
+        self.eventTimer = EventTimer(self, self.log, self.db)
+        self.log.log_info('EventTimer gestartet!')
+
         self.log.log_info('QDLiga gestartet!')
         while True:
             text = input()
@@ -48,6 +53,10 @@ class QDLiga:
 
     def stop(self):
         self.log.log_info('QDLiga stoppen...')
+
+        self.log.log_info('Beende EventTimer...')
+        self.eventTimer.stop()
+        self.log.log_info('EventTimer beendet!')
 
         self.log.log_info('Schließe Verbindung zur Datenbank...')
         self.db.stop()
