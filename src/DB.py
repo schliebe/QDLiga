@@ -345,3 +345,75 @@ class DB:
             self.conn.commit()
         except BaseException as e:
             self.log.log_error('Fehler beim erneuern eines Events in der DB', e)
+
+    def get_league_table(self, l_id):
+        """Gibt die aktuelle Tabelle der angegebenen Liga zurück.
+        Es werden nur Spiele betrachtet, die bereits abgeschlossen sind.
+        Das Ergebnis ist eine sortierte Liste von Tupeln der Form:
+            (Platz, P_ID, Spiele, Siege, Unentschieden, Nicht gespielt, Richtig,
+            Perfekt, Punkte)"""
+        try:
+            cursor = self.conn.cursor()
+            command = '''
+                SELECT Players.P_ID AS P_ID, IFNULL(Matches, 0) AS Matches,
+                    IFNULL(Win, 0) AS Win, IFNULL(Draw, 0) AS Draw,
+                    IFNULL(Lose, 0) AS Lose, IFNULL(NotPlayed, 0) AS NotPlayed,
+                    IFNULL(Correct, 0) AS Correct,
+                    IFNULL(Perfect, 0) AS Perfect, IFNULL(Points, 0) AS Points
+                FROM (
+                    SELECT Player AS P_ID
+                    FROM InLeague
+                    WHERE League = ?
+                ) AS Players
+                LEFT JOIN (
+                    SELECT P_ID, COUNT(P_ID) AS Matches, SUM(Win) AS Win,
+                        SUM(Draw) AS Draw, SUM(Lose) AS Lose,
+                        SUM(NotPlayed) AS NotPlayed, SUM(Res) AS Correct,
+                        SUM(Perfect) AS Perfect, SUM(Pts) AS Points
+                    FROM (
+                        SELECT P_ID, Res, Pts,
+                            CASE
+                                WHEN Res > Enemy THEN 1
+                                ELSE 0
+                            END AS Win,
+                            CASE
+                                WHEN Res = Enemy THEN 1
+                                ELSE 0
+                            END AS Draw,
+                            CASE
+                                WHEN Res = 0 THEN 0
+                                WHEN Res < Enemy THEN 1
+                                ELSE 0
+                            END AS Lose,
+                            CASE
+                                WHEN Pts = 0 THEN 1
+                                ELSE 0
+                            END AS NotPlayed,
+                            CASE
+                                WHEN Res = 18 THEN 1
+                                ELSE 0
+                            END AS Perfect
+                        FROM (
+                            SELECT P1 AS P_ID, Res1 AS Res, Res2 AS Enemy,
+                                Pts1 AS Pts
+                            FROM Match
+                            WHERE League = ? AND Verified = 3
+                            UNION ALL
+                            SELECT P2 AS P_ID, Res2 AS Res, Res1 AS Enemy,
+                                Pts2 AS Pts
+                            FROM Match
+                            WHERE League = ? AND Verified = 3)
+                        )
+                    GROUP BY P_ID
+                    ) AS Stat
+                ON Players.P_ID = Stat.P_ID
+                ORDER BY Points DESC, Correct DESC, Win DESC, Perfect DESC,
+                    NotPlayed ASC'''
+            cursor.execute(command, (l_id, l_id, l_id))
+            table = []
+            for row in cursor.fetchall():
+                table.append(row)
+            return table
+        except BaseException as e:
+            self.log.log_error('Fehler beim laden der Tabelle', e)
+            raise e
