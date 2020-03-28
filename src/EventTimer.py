@@ -67,8 +67,6 @@ class EventTimer:
                     next[0].timestamp(), 0,
                     self.execute_event, argument=(next[0], next[1]))
                 self.scheduler.run()
-            print('Hallo, ich laufe noch!')
-        print('Tschüss!')
 
     def stop(self):
         self.running = False
