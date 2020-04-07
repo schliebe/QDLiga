@@ -28,7 +28,8 @@ Diese Tabelle enthällt die Ligen in denen gespielt wird\
 `L_ID` League_ID\
 `Name` Name der Liga\
 `Season` Saison in der diese Liga gespielt wird\
-`Players` Anzahl der Spieler in der Liga
+`Players` Anzahl der Spieler in der Liga\
+`Level` Höhe der Liga in der Rangliste, 1 entspricht 1. Liga, etc.
 > Keines der Felder darf NULL sein
 
 ---

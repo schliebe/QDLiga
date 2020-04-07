@@ -307,16 +307,16 @@ class DB:
             self.log.log_error('Fehler beim entfernen von Warteliste', e)
             raise e
 
-    def create_league(self, name, season):
+    def create_league(self, name, season, level):
         """Legt eine neue Liga in der Datenbank an und gibt die L_ID zurück"""
         try:
             # Liga in Datenbank anlegen
             cursor = self.conn.cursor()
             command = '''
-                INSERT INTO League (Name, Season)
-                VALUES (?, ?)
+                INSERT INTO League (Name, Season, Level)
+                VALUES (?, ?, ?)
                 '''
-            cursor.execute(command, (name, season))
+            cursor.execute(command, (name, season, level))
             self.conn.commit()
 
             return self.get_l_id(name, season)

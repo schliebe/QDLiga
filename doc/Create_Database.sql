@@ -24,11 +24,12 @@ CREATE TABLE "League" (
 	"Name"	TEXT NOT NULL,
 	"Season"	INTEGER NOT NULL,
 	"Players"	INTEGER NOT NULL DEFAULT 0,
+	"Level"	INTEGER NOT NULL,
 	PRIMARY KEY("L_ID")
 )
 
 -- Warteliste
-INSERT INTO "League" ("L_ID", "Name", "Season", "Players") VALUES ('0', 'Warteliste', '0', '0');
+INSERT INTO "League" ("L_ID", "Name", "Season", "Players", "Level") VALUES ('0', 'Warteliste', '0', '0', '0');
 
 -- Informationen zu den einzelnen Spielern
 CREATE TABLE "Player" (
