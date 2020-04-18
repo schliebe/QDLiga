@@ -180,6 +180,10 @@ class TelegramBot:
             self.updater.is_idle = False
         threading.Thread(target=shutdown).start()
 
+    def send_message(self, chat_id, message, disable_notification=False):
+        self.updater.bot.send_message(chat_id, message,
+                                      disable_notification=disable_notification)
+
     def cleanup(self, update, context, text):
         # Löscht die zwischengespeicherten Daten eines Users, beim Abbrechen
         # durch /cancel, beim Timeout oder beim Beenden des Bot.

@@ -158,6 +158,18 @@ class QDLiga:
         except BaseException as e:
             raise e
 
+    def message_player(self, p_id, message):
+        # TODO Wie soll benachrichtigt werden? Momentan nur Telegram
+
+        # Versenden über Telegram
+        chat_id = self.db.get_input_method(p_id, self.telegramBot.INPUT_METHOD)
+        print('Send Message: "{}" to {}'.format(message, p_id))
+        if chat_id:
+            # Sofern Eingabemethode vorhanden, Nachricht senden
+            self.telegramBot.send_message(chat_id, message)
+        else:
+            self.log.log_error('Spieler hat keine TelegramID')
+
 
 if __name__ == "__main__":
     QDLiga()

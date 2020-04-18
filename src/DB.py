@@ -194,6 +194,26 @@ class DB:
             self.log.log_error('Fehler beim hinzufügen einer Eingabemethode', e)
             raise e
 
+    def get_input_method(self, p_id, input_method):
+        """Gibt eine bestimmte Eingabemethode für einen Spieler zurück, sofern
+        vorhanden"""
+        try:
+            cursor = self.conn.cursor()
+            command = '''
+                SELECT {}
+                FROM Player
+                WHERE P_ID = ?
+                '''.format(input_method)
+            cursor.execute(command, (p_id,))
+            result = cursor.fetchone()
+            if result:
+                return result[0]
+            else:
+                return None  # Wenn kein Wert vorhanden ist
+        except BaseException as e:
+            self.log.log_error('Fehler beim Laden der Eingabemethode', e)
+            raise e
+
     def check_input_method_used(self, input_method, value):
         """Überprüft, ob der Wert einer Eingabemethode bereits in der Datenbank
         vergeben ist"""
@@ -345,6 +365,7 @@ class DB:
             self.conn.commit()
         except BaseException as e:
             self.log.log_error('Fehler beim erneuern eines Events in der DB', e)
+            raise e
 
     def get_league_table(self, l_id):
         """Gibt die aktuelle Tabelle der angegebenen Liga zurück.
