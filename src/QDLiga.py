@@ -158,6 +158,211 @@ class QDLiga:
         except BaseException as e:
             raise e
 
+    def create_game_schedule(self, player_list):
+        """Liefert einen Spielplan einer Liga im (Double) Round Robin Format.
+        Einzelne Begegnungen werden hierbei als Tupel (Sp1, Sp2) gespeichert.
+        Als player_list wird eine Liste der L_IDs von Spielern übergeben.
+        Zurückgegeben.
+        Freilose werden nicht gesondert zurückgegeben.
+        Rückgabe ist eine Liste der Begegnungen für die Hinrunde sowie der
+        Rückrunde (jeweils gespiegelt)"""
+        players = len(player_list)
+        if players % 2 == 1:
+            player_list.append(-1)
+            players = players + 1
+        game_schedule = []
+        game_schedule_drr = []  # Spielplan für die Rückrunde
+
+        for o in range(players-1):  # N-1 Spiele für N Spieler
+            # Spielerliste für den Spieltag anlegen
+            # Die Liste wird durchrotiert, sodass jeder gegen jeden spielt,
+            # anschließend werden die Begegnungen anhand der Listenposition
+            # bestimmt. Formel: (o + i) % (l-1) + 1 (l=länge, o=spieltag)
+            # Der erste Spieler behält stets seine Position
+            gameday = []
+            for i in range(players):
+                gameday.append(player_list[(o + i) % (players-1)+1])
+            gameday[0] = player_list[0]
+            for k in range(len(gameday)//2):
+                if gameday[k] == -1 or gameday[-1-k] == -1:
+                    # Freilos nicht in Liste eintragen
+                    pass
+                else:
+                    game_schedule.append((gameday[k], gameday[-1-k]))
+                    game_schedule_drr.append((gameday[-1-k], gameday[k]))
+
+        return game_schedule, game_schedule_drr
+
+    def regroup(self):
+        # Spieler-Informationen zwischenspeichern
+        player_info = {}
+        # Liga-Namen zwischenspeichern
+        league_names = {}
+
+        # Liga-Ergebnisse vorheriger Saison laden
+        # Liste aller L_IDs der aktuellen Saison
+        l_ids = self.db.get_all_leagues(self.season)
+        leagues = []
+        # Für jede Liga die Tabelle abrufen und eintragen
+        for l in l_ids:
+            # In der Form: (L_ID, [Tabelle der Liga], Level, Name)
+            leagues.append((l[0], self.db.get_league_table(l[0]), l[1], l[2]))
+            # Namen der Ligen zwischenspeichern
+            league_names[l[0]] = l[2]
+
+        # Überprüfen, ob Spieler noch spielen wollen
+        # Status aller Spieler laden
+        status = self.db.get_player_status(self.season)
+        # Spieler die nicht spielen wollen durch leere Einträge ersetzen
+        placeholder = (-1, 0, 0, 0, 0, 0, 0, 0, 0)  # Leerer Eintrag
+        new_leagues = []
+        for l in range(len(leagues)):
+            players = leagues[l][1]  # Liste der Liga-Ergebnisse
+            rem = []  # Liste der zu löschenden Elemente
+            for p in players:
+                # Spieler der Info-Liste hinzufügen und aktuelle Liga speichern
+                player_info[p[0]] = {}
+                player_info[p[0]]['last_league'] = leagues[l][0]
+                player_info[p[0]]['last_level'] = leagues[l][2]
+                if status[p[0]] == 0:
+                    # Wenn Status = 0, wird der aktuelle Eintrag zur Löschliste
+                    # hinzugefügt
+                    rem.append(p)
+                    player_info[p[0]]['next_league'] = None
+                    player_info[p[0]]['next_level'] = None
+            for r in rem:
+                # Entsprechende Einträge löschen und durch einen leere Einträge
+                # (P_ID = -1) ersetzen
+                players.append(placeholder)
+                players.remove(r)
+            new_leagues.append((leagues[l][0], players))
+
+        # Auf- und Abstiege durchführen
+        if len(new_leagues) > 1:  # Sonst keine Auf-/Abstiege
+            for l in range(len(new_leagues)-1):
+                top = new_leagues[l][1]
+                bot = new_leagues[l+1][1]
+                swap_down_1 = top[6]  # Höhere Liga, Platz 7
+                swap_down_2 = top[7]  # Höhere Liga, Platz 8
+                swap_up_1 = bot[0]   # Tiefere Liga, Platz 1
+                swap_up_2 = bot[1]   # Tiefere Liga, Platz 2
+                # Spieler aus alten Ligen entfernen
+                new_leagues[l][1].remove(swap_down_1)
+                new_leagues[l][1].remove(swap_down_2)
+                new_leagues[l+1][1].remove(swap_up_1)
+                new_leagues[l+1][1].remove(swap_up_2)
+                # Spieler in neue Ligen einfügen
+                new_leagues[l][1].insert(6, swap_up_1)
+                new_leagues[l][1].insert(7, swap_up_2)
+                new_leagues[l+1][1].insert(0, swap_down_1)
+                new_leagues[l+1][1].insert(1, swap_down_2)
+
+        # Ligen in eine Liste zusammenführen und leere Einträge entfernen
+        # Liste speichert nur noch die Spieler und nicht mehr die Ergebnisse
+        single_list = []
+        for l in new_leagues:
+            for p in l[1]:
+                if p is not placeholder:
+                    single_list.append(p[0])
+        # Warteliste anhängen
+        queue = self.db.get_queue()
+        for p in queue:
+            player_info[p] = {}
+            player_info[p]['last_league'] = 0
+            player_info[p]['last_level'] = 0
+        single_list.extend(queue)
+
+        # Einteilung in neue Ligen von oben nach unten in 8er Gruppen
+        # Spieler werden bei Einteilung aus Warteliste entfernt
+        new_leagues = []
+        while len(single_list) >= 8:
+            league = []
+            for i in range(8):
+                league.append(single_list[0])
+                if single_list[0] in queue:
+                    self.db.remove_from_queue(single_list[0])
+                single_list.remove(single_list[0])
+            new_leagues.append(league)
+        # Unterste Liga ab 4 Spielern, sonst weiter auf Warteliste
+        if len(single_list) >= 4:
+            league = []
+            for i in range(len(single_list)):
+                league.append(single_list[0])
+                if single_list[0] in queue:
+                    self.db.remove_from_queue(single_list[0])
+                single_list.remove(single_list[0])
+            new_leagues.append(league)
+        else:
+            for p in range(len(single_list)):
+                if player_info[single_list[p]]['last_league'] is not 0:
+                    self.db.add_to_queue(single_list[p])
+                player_info[single_list[p]]['next_league'] = 0
+                player_info[single_list[p]]['next_level'] = 0
+
+        # Ligen erstellen
+        for l in range(len(new_leagues)):
+            name = 'Liga {}'.format(l+1)
+            l_id = self.db.create_league(name, self.season+1, l+1)
+            league_names[l_id] = name
+            # Spieler den Ligen hinzufügen
+            for p in new_leagues[l]:
+                self.db.add_to_league(l_id, p)
+                player_info[p]['next_league'] = l_id
+                player_info[p]['next_level'] = l + 1
+            # Spiele anlegen
+            hr, rr = self.create_game_schedule(new_leagues[l])
+            self.db.create_games(l_id, 1, hr)
+            self.db.create_games(l_id, 2, rr)
+
+        # Spieler benachrichtigen
+        league_names[0] = 'Warteliste'
+        for p in player_info:
+            last = player_info[p]['last_level']
+            next = player_info[p]['next_level']
+            last_name = league_names[player_info[p]['last_league']]
+            if next is None:
+                next_name = None
+            else:
+                next_name = league_names[player_info[p]['next_league']]
+
+            # Spieler spielt nächste Saison nicht mehr
+            if next is None:
+                text = ('Du spielst nächste Saison nicht mehr mit. Sobald du '
+                        'wieder teilnehmen möchtest, änder einfach deinen '
+                        'Status im Account-Menü!')
+            # Spieler war in Warteliste
+            elif last == 0:
+                # Spieler bleibt in Warteliste
+                if next == 0:
+                    text = ('Leider sind nicht genügend Spieler vorhanden. Du '
+                            'befindest dich auch in der nächsten Saison '
+                            'weiterhin auf der Warteliste!')
+                # Spieler steigt aus Warteliste auf
+                else:
+                    text = ('Du spielst nächste Saison in {}. '
+                            'Viel Erfolg!').format(next_name)
+            else:
+                if next == 0:
+                    text = ('Leider sind nicht genügend Spieler vorhanden. Du '
+                            'befindest dich für nächste Saison auf der '
+                            'Warteliste!')
+                elif last == next:
+                    text = ('Du hälst deine Liga und spielst nächste Saison in '
+                            '{}. Viel Erfolg!').format(next_name)
+                elif last > next:
+                    text = ('Du bist aufgestiegen und spielst nächste Saison '
+                            'in {}. Viel Erfolg!').format(next_name)
+                elif last < next:
+                    text = ('Du bist leider abgestiegen und spielst nächste '
+                            'Saison in {}. Viel Erfolg!').format(next_name)
+                else:
+                    self.log.log_error('Fehler beim benachrichtigen eines '
+                                       'Spielers')
+                    print('p:', p)
+                    print('player_info', player_info)
+                    continue
+            self.message_player(p, text)
+
     def message_player(self, p_id, message):
         # TODO Wie soll benachrichtigt werden? Momentan nur Telegram
 

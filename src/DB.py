@@ -438,3 +438,88 @@ class DB:
         except BaseException as e:
             self.log.log_error('Fehler beim laden der Tabelle', e)
             raise e
+
+    def get_all_leagues(self, season):
+        """Gibt die L_IDs aller Ligen zurück, die in der übergebenen Saison
+        spielen"""
+        try:
+            cursor = self.conn.cursor()
+            command = '''
+                SELECT L_ID, Level, Name
+                FROM League
+                WHERE Season = ?
+                '''
+            cursor.execute(command, (season,))
+            leagues = []
+            for row in cursor.fetchall():
+                leagues.append((row[0], row[1], row[2]))
+            return leagues
+        except BaseException as e:
+            self.log.log_error('Fehler beim laden der Ligen', e)
+            raise e
+
+    def get_player_status(self, season=None):
+        """Gibt den Status aller Spieler als Dict (L_ID: Status) zurück.
+        Wird eine Saison übergeben, so werden nur die Spieler geladen, die in
+        dieser gespielt haben"""
+        try:
+            cursor = self.conn.cursor()
+            if season:
+                command = '''
+                    SELECT DISTINCT P_ID, Status
+                    FROM InLeague
+                    JOIN Player ON InLeague.Player=Player.P_ID
+                    WHERE League IN (
+                        SELECT L_ID
+                        FROM League
+                        WHERE Season = ?)
+                    '''
+                cursor.execute(command, (season,))
+            else:
+                command = '''
+                    SELECT P_ID, Status
+                    FROM Player
+                    '''
+                cursor.execute(command)
+            status = {}
+            for row in cursor.fetchall():
+                status[row[0]] = row[1]
+            return status
+        except BaseException as e:
+            self.log.log_error('Fehler beim laden des Status', e)
+            raise e
+
+    def get_queue(self):
+        """Gibt eine Liste der Spieler zurück, welche sich gerade in der
+        Warteliste befinden"""
+        try:
+            cursor = self.conn.cursor()
+            command = '''
+                SELECT Player
+                FROM InLeague
+                WHERE League = 0
+                ORDER BY ROWID
+                '''
+            cursor.execute(command)
+            queue = []
+            for row in cursor.fetchall():
+                queue.append(row[0])
+            return queue
+        except BaseException as e:
+            self.log.log_error('Fehler beim laden der Warteliste', e)
+            raise e
+
+    def create_games(self, league, round, match_list):
+        """Erstellt eine Liste von Spielen in der angegebenen Liga und Saison"""
+        try:
+            cursor = self.conn.cursor()
+            for match in match_list:
+                command = '''
+                    INSERT INTO Match (League, Round, P1, P2)
+                    VALUES (?, ?, ?, ?)
+                    '''
+                cursor.execute(command, (league, round, match[0], match[1]))
+            self.conn.commit()
+        except BaseException as e:
+            self.log.log_error('Fehler beim erstellen der Spiele', e)
+            raise e
