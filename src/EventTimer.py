@@ -66,6 +66,8 @@ class EventTimer:
                 self.current = self.scheduler.enterabs(
                     next[0].timestamp(), 0,
                     self.execute_event, argument=(next[0], next[1]))
+                self.log.log_info('Nächstes Event: {}; Timestamp: {}'
+                                  .format(next[1], next[0]))
                 self.scheduler.run()
 
     def stop(self):
@@ -135,24 +137,19 @@ class EventTimer:
         if self.running:  # Nur ausführen, wenn Thread nicht gestoppt
             # Altes Event aus Event-Liste löschen
             self.event_list.remove((timestamp, event))
-            print(timestamp, event)
             # Je nach Event, andere Funktion ausführen:
-            if event == 'P':
-                # Pause
-                # TODO implement
-                print('P')
-            elif event == 'HR':
+            if event == 'HR':
                 # Start der Hinrunde
-                # TODO implement
-                print('HR')
+                self.parent.week1()
             elif event == 'RR':
                 # Start der Rückrunde
-                # TODO implement
-                print('RR')
+                self.parent.week2()
+            elif event == 'P':
+                # Pause-Woche
+                self.parent.week3()
             elif event == 'RGRP':
                 # Regroup
-                # TODO implement
-                print('RGRP')
+                self.parent.regroup()
             else:
                 # Unbekanntes Event
                 self.log.log_notification('Unbekanntes Event ausgelöst!')

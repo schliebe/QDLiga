@@ -158,6 +158,31 @@ class QDLiga:
         except BaseException as e:
             raise e
 
+    def week1(self):
+        # Start der Hinrunde, Start der neuen Saison
+        self.season = self.season + 1
+        self.round = 1
+        self.db.set_time_settings(self.season, self.round)
+        self.log.log_info('Start von Saison {}'.format(self.season))
+        self.log.log_info('Start der Hinrunde')
+        # TODO Benachrichtigung an Spieler?
+
+    def week2(self):
+        # Ende der Hinrunde, Start der Rückrunde
+        self.round = 2
+        self.db.set_time_settings(self.season, self.round)
+        self.log.log_info('Ende der Hinrunde')
+        self.log.log_info('Start der Rückrunde')
+        # TODO Benachrichtigung an Spieler?
+
+    def week3(self):
+        # Ende der Rückrunde, Start der Pause-Woche
+        self.round = 0
+        self.db.set_time_settings(self.season, self.round)
+        self.log.log_info('Ende der Rückrunde')
+        self.log.log_info('Start der Pause-Woche')
+        # TODO Benachrichtigung an Spieler?
+
     def create_game_schedule(self, player_list):
         """Liefert einen Spielplan einer Liga im (Double) Round Robin Format.
         Einzelne Begegnungen werden hierbei als Tupel (Sp1, Sp2) gespeichert.
