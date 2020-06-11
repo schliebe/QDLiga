@@ -69,9 +69,14 @@ class TelegramBot:
         # unten nach oben.
         default_handler = ConversationHandler(
             entry_points=[],
-            states={},
+            states={
+                self.TIMEOUT: [
+                    MessageHandler(None, self.timeout)
+                ]
+            },
             fallbacks=[CommandHandler('cancel', self.cancel)],
-            map_to_parent={}
+            map_to_parent={},
+            conversation_timeout=self.TIMEOUT_TIME
         )
         go_back_handler = MessageHandler(Filters.regex('^(Zurück)$'),
                                          self.go_back)  # Zurück ins Hauptmenü
