@@ -81,13 +81,13 @@ class TelegramBot:
         go_back_handler = MessageHandler(Filters.regex('^(Zurück)$'),
                                          self.go_back)  # Zurück ins Hauptmenü
 
-        # Menü: Eintragen (E1)
+        # TODO Implementieren
+        # Menü: Duelle (E1)
+
+        # Menü: Liga (E1)
         # TODO Implementieren
 
-        # Menü: Spielplan (E1)
-        # TODO Implementieren
-
-        # Menü: Tabelle (E1)
+        # Menü: Statistiken (E1)
         # TODO Implementieren
 
         # Menü: Account
@@ -170,8 +170,8 @@ class TelegramBot:
         # Speichert alle möglichen Keyboards, sodass diese nicht immer neu
         # erstellt werden müssen
         self.keyboards['yesno'] = [['Ja', 'Nein']]  # Ja/Nein
-        self.keyboards['main'] = [['Eintragen', 'Spielplan'],
-                                  ['Tabelle', 'Account'],
+        self.keyboards['main'] = [['Duelle', 'Liga'],
+                                  ['Statistiken', 'Account'],
                                   ['Support', 'Mehr']]  # Hauptmenü
         self.keyboards['account'] = [['Registrieren', 'Status ändern'],
                                      ['Zurück']]  # Account
@@ -248,7 +248,7 @@ class TelegramBot:
 
     def account(self, update, context, log_input=True):
         # Menü für Account (E1)
-        # Aufgerufen mit /account oder über das Hauptmenü
+        # Aufgerufen über das Hauptmenü
         # Leitet an Untermenüs weiter
         chat_id = update.effective_chat.id
         message = update.message.text

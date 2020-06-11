@@ -42,7 +42,7 @@
       <w>140</w>
       <h>56</h>
     </coordinates>
-    <panel_attributes>EINTRAGEN</panel_attributes>
+    <panel_attributes>DUELLE</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
@@ -53,7 +53,7 @@
       <w>140</w>
       <h>56</h>
     </coordinates>
-    <panel_attributes>SPIELPLAN</panel_attributes>
+    <panel_attributes>LIGA</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
@@ -64,7 +64,7 @@
       <w>140</w>
       <h>56</h>
     </coordinates>
-    <panel_attributes>TABELLE</panel_attributes>
+    <panel_attributes>STATISTIKEN</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
