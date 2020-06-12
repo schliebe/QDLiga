@@ -523,3 +523,43 @@ class DB:
         except BaseException as e:
             self.log.log_error('Fehler beim erstellen der Spiele', e)
             raise e
+
+    def get_active_matches(self, p_id):
+        """Gibt eine Liste der aktiven Duelle eines Spielers, sowie das Ergebnis
+        und den jeweiligen Verified-Status zurück. Die Einträge werden so
+        angeordnet, dass der übergebene Spieler als P1 behandelt wird"""
+        try:
+            cursor = self.conn.cursor()
+            command = '''
+                SELECT Matches.M_ID, Matches.Op_ID, Player.Username as Op_Name, Matches.Res1, Matches.Res2, Matches.Verified
+                FROM
+                    (SELECT M_ID, P2 as Op_ID, Res1, Res2, Verified
+                    FROM Match
+                    WHERE Round = (SELECT Round FROM Settings)
+                    AND P1 = ?
+                    AND League IN (SELECT L_ID
+                                   FROM League
+                                   WHERE Season = (SELECT Season FROM Settings))
+                    UNION ALL
+                    SELECT M_ID, P1 as Op_ID, Res2 as Res1, Res1 as Res2, CASE WHEN Verified = 1 THEN 2
+                                                                               WHEN Verified = 2 THEN 1
+                                                                               WHEN Verified = 4 THEN 5
+                                                                               WHEN Verified = 5 THEN 4
+                                                                               ELSE Verified
+                                                                               END as Verified
+                    FROM Match
+                    WHERE Round = (SELECT Round FROM Settings)
+                    AND P2 = ?
+                    AND League IN (SELECT L_ID
+                                   FROM League
+                                   WHERE Season = (SELECT Season FROM Settings))) as Matches
+                LEFT JOIN Player ON Matches.OP_ID = Player.P_ID
+                '''
+            cursor.execute(command, (p_id, p_id))
+            matches = []
+            for row in cursor.fetchall():
+                matches.append([row[0], row[1], row[2], row[3], row[4], row[5]])
+            return matches
+        except BaseException as e:
+            self.log.log_error('Fehler beim laden der aktiven Duelle', e)
+            raise e

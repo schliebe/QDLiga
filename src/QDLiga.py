@@ -400,6 +400,28 @@ class QDLiga:
         else:
             self.log.log_error('Spieler hat keine TelegramID')
 
+    def is_currently_playing(self, p_id):
+        """Gibt zurück, ob der übergebene Spieler aktuell in einer Liga spielt
+        oder nicht"""
+        return self.db.is_in_league(p_id, self.season)
+
+    def get_active_matches(self, p_id):
+        """Gibt eine Liste der aktuellen Duelle eines Spielers zurück.
+        Jedes der Duelle ist ein Tupel der Form:
+        (M_ID, Gegner_ID, Gegner_Name, Erg1, Erg2, Status)
+        M_ID ist die M_ID des Duells,
+        Gegner_ID ist hierbei die P_ID und Gegner_Name der Name des Gegners,
+        Erg1 und Erg2 sind das Ergebnis des Duells (sofern bereits eingetragen)
+        und Status ist der aktuelle Verifizierungsstatus des Duells
+        (Siehe Dokumentation der Datenbank).
+        Alle Werte sind aus Sicht der Spielers angeordnet"""
+        return self.db.get_active_matches(p_id)
+
+    def submit_result(self, m_id, p_id, res1, res2):
+        """"""
+        # TODO implement
+        pass
+
 
 if __name__ == "__main__":
     QDLiga()
