@@ -563,3 +563,33 @@ class DB:
         except BaseException as e:
             self.log.log_error('Fehler beim laden der aktiven Duelle', e)
             raise e
+
+    def load_match(self, m_id):
+        """Lädt ein bestimmtes Duell aus der Datenbank"""
+        try:
+            cursor = self.conn.cursor()
+            command = '''
+                SELECT *
+                FROM Match
+                WHERE M_ID = ?
+                '''
+            cursor.execute(command, (m_id,))
+            return cursor.fetchone()
+        except BaseException as e:
+            self.log.log_error('Fehler beim laden eines Duells', e)
+            raise e
+
+    def update_match(self, m_id, res1, res2, pts1, pts2, verified):
+        """Ändert das Ergebnis eines Duells in der Datenbank"""
+        try:
+            cursor = self.conn.cursor()
+            command = '''
+                        UPDATE Match
+                        SET Res1 = ?, Res2 = ?, Pts1 = ?, Pts2 = ?, Verified = ?
+                        WHERE M_ID = ?
+                        '''
+            cursor.execute(command, (res1, res2, pts1, pts2, verified, m_id))
+            self.conn.commit()
+        except BaseException as e:
+            self.log.log_error('Fehler beim öndern des Duells', e)
+            raise e

@@ -403,7 +403,9 @@ class TelegramBot:
         if message == 'Ja':
             match = self.user[chat_id]['match']
             p_id = self.user[chat_id]['p_id']
-            self.parent.submit_result(match[0], p_id, match[3], match[4])
+            res1 = self.user[chat_id]['res1']
+            res2 = self.user[chat_id]['res2']
+            self.parent.submit_result(match[0], p_id, res1, res2)
             if self.user[chat_id]['match'][5] == 0:
                 reply = ('Das Ergebnis wurde eingetragen und muss nur noch von '
                          'deinem Gegner bestätigt werden!')

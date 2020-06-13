@@ -19,6 +19,11 @@ class QDLiga:
             file.close()
             return tokens
 
+        self.PTS_WIN = 5
+        self.PTS_DRAW = 3
+        self.PTS_LOSE = 1
+        self.PTS_NOTPLAYED = 0
+
         # Logger erstellen
         self.log = Logger()
 
@@ -418,9 +423,76 @@ class QDLiga:
         return self.db.get_active_matches(p_id)
 
     def submit_result(self, m_id, p_id, res1, res2):
-        """"""
-        # TODO implement
-        pass
+        """Lädt das aktuelle Ergebnis des Duells aus der Datenbank und überprüft
+        wie das übergebene Ergebnis angewendet werden soll.
+        Status 0: Ergebnis in Datenbank eintragen, Status je nach Spieler auf
+            1 bzw. 2 setzen
+        Status 1/2: Ergebnis mit Ergebnis in der Datenbank abgleichen.
+            Wenn korrekt auf Status 3, sonst auf Status 4 bzw. 5 setzen und
+            Benachrichtigung für Support auslösen
+        Status 4/5: Fehlermeldung, da unerwünschte Aktion"""
+        # Duell laden
+        match = self.db.load_match(m_id)
+        if match:
+            m_id, _, _, p1, p2, r1, r2, pts1, pts2, verified = match
+            # Überprüfen ob p1 oder p2 das neue Ergebnis gesendet hat
+            if p_id == p1:
+                from_p1 = True
+            elif p_id == p2:
+                from_p1 = False
+            else:
+                self.log.log_error(('Ungültiger Spieler beim eingeben des '
+                                   'Ergebnis'))
+                return
+            # Fallunterscheidung, siehe Kommentar
+            # Kein Ergebnis vorhanden
+            if verified == 0:
+                # Berechnen, wie viele Punkte die Spieler erhalten
+                if res1 > res2:
+                    pts_for = self.PTS_WIN
+                    pts_against = self.PTS_LOSE
+                elif res1 == res2:
+                    pts_for = self.PTS_DRAW
+                    pts_against = self.PTS_DRAW
+                elif res1 < res2:
+                    pts_for = self.PTS_LOSE
+                    pts_against = self.PTS_WIN
+                # Ergebnis in Datenbank aktualisieren
+                # Wenn p2 das Ergebnis gesendet hat werden die Eingaben
+                # entsprechend getauscht
+                if from_p1:
+                    self.db.update_match(
+                        m_id, res1, res2, pts_for, pts_against, 1)
+                    # TODO Gegenspieler benachrichtigen
+                else:
+                    self.db.update_match(
+                        m_id, res2, res1, pts_against, pts_for, 2)
+                    # TODO Gegenspieler benachrichtigen
+            # Spieler 2 bestätigt oder korrigiert Ergebnis von Spieler 1
+            elif verified == 1 and not from_p1:
+                if res1 == r2 and res2 == r1:
+                    # Ergebnis bestätigt, Status auf 3 setzen
+                    self.db.update_match(m_id, r1, r2, pts1, pts2, 3)
+                else:
+                    # Ergebnis korrigiert, Status auf 4 setzen
+                    # Admin benachrichtigen, Problem zu lösen
+                    self.db.update_match(m_id, r1, r2, pts1, pts2, 4)
+                    # TODO Anfrage an Support weiterleiten
+            # Spieler 1 bestätigt oder korrigiert Ergebnis von Spieler 2
+            elif verified == 2 and from_p1:
+                if res1 == r1 and res2 == r2:
+                    # Ergebnis bestätigt, Status auf 3 setzen
+                    self.db.update_match(m_id, r1, r2, pts1, pts2, 3)
+                else:
+                    # Ergebnis korrigiert, Status auf 5 setzen
+                    # Admin benachrichtigen um Problem zu lösen
+                    self.db.update_match(m_id, r1, r2, pts1, pts2, 5)
+                    # TODO Anfrage an Support weiterleiten
+            else:
+                self.log.log_error(('Ungewünschter Status des zu ändernden '
+                                   'Duells'))
+        else:
+            self.log.log_error('Fehler beim laden des Duells')
 
 
 if __name__ == "__main__":
