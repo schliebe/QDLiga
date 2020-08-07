@@ -494,6 +494,20 @@ class QDLiga:
         else:
             self.log.log_error('Fehler beim laden des Duells')
 
+    def get_stats_top10(self):
+        """Gibt die Top 10 der Gesamtstatistik zurück.
+        Die einzelnen Zeilen haben die Form:
+        (P_ID, Username, Matches, Win, Draw, Lose, NotPlayed, Correct, Perfect,
+        Points)"""
+        return self.db.get_stats_top10()
+
+    def get_stats_single(self, p_id):
+        """Gibt den Gesamtstatistikwert eines einzelnen Spielers zurück.
+        Die Zeile hat die Form:
+        (Pos, P_ID, Username, Matches, Win, Draw, Lose, NotPlayed, Correct,
+        Perfect, Points)"""
+        return self.db.get_stats_single(p_id)
+
 
 if __name__ == "__main__":
     QDLiga()

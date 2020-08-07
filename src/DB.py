@@ -593,3 +593,39 @@ class DB:
         except BaseException as e:
             self.log.log_error('Fehler beim öndern des Duells', e)
             raise e
+
+    def get_stats_top10(self):
+        """Lädt die Top 10 aus der Gesamtstatistik"""
+        try:
+            cursor = self.conn.cursor()
+            command = '''
+                SELECT Stats.P_ID, Username, Matches, Win, Draw, Lose, NotPlayed, Correct, Perfect, Points
+                FROM Stats
+                LEFT JOIN Player on Stats.P_ID = Player.P_ID
+                LIMIT 10
+                '''
+            cursor.execute(command)
+            return cursor.fetchall()
+        except BaseException as e:
+            self.log.log_error('Fehler beim laden der Gesamtstatistik', e)
+            raise e
+
+    def get_stats_single(self, p_id):
+        """Lädt Werte eines Spielers aus der Gesamtstatistik"""
+        try:
+            cursor = self.conn.cursor()
+            command = '''
+                SELECT Pos, Stats.P_ID, Username, Matches, Win, Draw, Lose, NotPlayed, Correct, Perfect, Points
+                FROM
+                    (SELECT *
+                     FROM (SELECT row_number() OVER (ORDER BY NULL) as Pos, *
+                           FROM Stats)
+                     WHERE P_ID = ?) as Stats
+                LEFT JOIN Player on Stats.P_ID = Player.P_ID
+                '''
+            cursor.execute(command, (p_id,))
+            return cursor.fetchone()
+        except BaseException as e:
+            self.log.log_error(('Fehler beim laden eines einzelnen '
+                                'Statistikwerts'), e)
+            raise e
