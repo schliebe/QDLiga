@@ -14,7 +14,7 @@ Die Datenbank befindet sich im Hauptordner in der Datei 'QDLiga.db'
 
 ---
 ### Player
-Diese Tabelle enthällt alle Spieler und deren Daten\
+Diese Tabelle enthält alle Spieler und deren Daten\
 `P_ID` Player_ID\
 `Username` QD-Benutzername des Spielers\
 `Status` Teilnahmestatus des Spielers (→ [Teilnahmestatus](#teilnahmestatus "Teilnahmestatus"))\
@@ -24,7 +24,7 @@ Diese Tabelle enthällt alle Spieler und deren Daten\
 
 ---
 ### League
-Diese Tabelle enthällt die Ligen in denen gespielt wird\
+Diese Tabelle enthält die Ligen in denen gespielt wird\
 `L_ID` League_ID\
 `Name` Name der Liga\
 `Season` Saison in der diese Liga gespielt wird\
@@ -62,11 +62,24 @@ Diese Tabelle enthält genau einen Eintrag mit den aktuellen Einstellungen des B
 
 ---
 ### Events
-Diese Tabelle enthällt die Events, die zu einem bestimmten Zeitpunkt vom EventTimer ausgeführt werden sollen\
+Diese Tabelle enthält die Events, die zu einem bestimmten Zeitpunkt vom EventTimer ausgeführt werden sollen\
 `Timestamp` Zeitstempel wann das Event stattfinden soll (in UTC)\
 `Event` Das Event das stattfinden soll (→ [Event](#event "Event"))
 > Keines der Felder darf NULL sein
 > Jedes Event darf nur einmal vorhanden sein
+
+---
+### Stats
+Diese Tabelle ist eine View, die die zusammengerechneten Ergebnisse aller Spieler enthält\
+`P_ID` Player_ID\
+`Matches` Anzahl gespielter Duelle\
+`Win` Anzahl Siege\
+`Draw` Anzahl Unentschieden\
+`Lose` Anzahl Niederlagen\
+`NotPlayed` Anzahl nicht angetretener Spiele\
+`Correct` Anzahl richtig beantworteter Fragen\
+`Perfect` Anzahl perfekte Spiele\
+`Points` Anzahl erhaltene Punkte
 
 ---
 ### sqlite_sequence
