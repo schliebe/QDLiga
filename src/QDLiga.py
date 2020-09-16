@@ -5,6 +5,7 @@ from Logger import Logger
 from DB import DB
 from TelegramBot import TelegramBot
 from EventTimer import EventTimer
+from MediaGenerator import MediaGenerator
 
 
 class QDLiga:
@@ -50,6 +51,9 @@ class QDLiga:
         self.log.log_info('Starte EventTimer...')
         self.eventTimer = EventTimer(self, self.log, self.db)
         self.log.log_info('EventTimer gestartet!')
+
+        self.mediaGenerator = MediaGenerator(self)
+        self.log.log_info('MediaGenerator geladen')
 
         self.log.log_info('QDLiga gestartet!')
         while True:
@@ -507,6 +511,12 @@ class QDLiga:
         (Pos, P_ID, Username, Matches, Win, Draw, Lose, NotPlayed, Correct,
         Perfect, Points)"""
         return self.db.get_stats_single(p_id)
+
+    def generate_statistics_table(self, p_id=None):
+        """Gibt ein Bild der Statistik-Tabelle zurück.
+        Darin sind die besten 10 Spieler sowie ggf. der aufrufende Spieler
+        enthalten, sofern sich dieser nicht in den Top 10 befindet"""
+        return self.mediaGenerator.generate_statistics(p_id)
 
 
 if __name__ == "__main__":

@@ -26,5 +26,6 @@ Die QD-Liga ist ein automatisches Ligasystem für eine bekannte Quizapp. Die Spi
 - [Logger](doc/Logger.md "Logger")
 - [TelegramBot](doc/TelegramBot.md "TelegramBot")
 - [EventTimer](doc/EventTimer.md "EventTimer")
+- [MediaGenerator](doc/MediaGenerator.md "MediaGenerator")
 
 ---
