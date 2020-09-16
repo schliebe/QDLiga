@@ -5,6 +5,7 @@ from telegram import (ReplyKeyboardMarkup, ReplyKeyboardRemove)
 from telegram.ext import (Updater, CommandHandler, MessageHandler,
                           ConversationHandler, Filters)
 import threading
+from io import BytesIO
 
 
 class TelegramBot:
@@ -57,6 +58,7 @@ class TelegramBot:
         self.MATCHES_PTS2 = 103
         self.MATCHES_CONFIRM = 104
         self.MATCHES_VERIFY = 105
+        self.STATISTICS = 300
         self.ACCOUNT = 400
         self.REGISTER = 410
         self.REGISTER_YESNO = 411
@@ -123,7 +125,20 @@ class TelegramBot:
         # TODO Implementieren
 
         # Menü: Statistiken (E1)
-        # TODO Implementieren
+        statistics_handler = ConversationHandler(
+            entry_points=[MessageHandler(Filters.regex('^(Statistiken)$'),
+                                         self.statistics)],
+            states={
+                self.STATISTICS: [
+                    go_back_handler,
+                    MessageHandler(Filters.regex('^(Statistik anzeigen)$'),
+                                   self.statistics_select),
+                ],
+            },
+            fallbacks=[CommandHandler('cancel', self.cancel)],
+            conversation_timeout=self.TIMEOUT_TIME
+        )
+        self.dispatcher.add_handler(statistics_handler)
 
         # Menü: Account
         # Registrieren (E2)
@@ -208,6 +223,8 @@ class TelegramBot:
         self.keyboards['main'] = [['Duelle', 'Liga'],
                                   ['Statistiken', 'Account'],
                                   ['Support', 'Mehr']]  # Hauptmenü
+        self.keyboards['statistics'] = [['Statistik anzeigen'],
+                                        ['Zurück']]  # Statistiken
         self.keyboards['account'] = [['Registrieren', 'Status ändern'],
                                      ['Zurück']]  # Account
         self.keyboards['status'] = [['Aktiv', 'Inaktiv']]  # Status ändern
@@ -223,6 +240,15 @@ class TelegramBot:
     def send_message(self, chat_id, message, disable_notification=False):
         self.updater.bot.send_message(chat_id, message,
                                       disable_notification=disable_notification)
+
+    def send_image(self, chat_id, image, caption=None, disable_notification=False):
+        bio = BytesIO()
+        bio.name = 'image.png'
+        image.save(bio, 'PNG')
+        bio.seek(0)
+
+        self.updater.bot.send_photo(chat_id, photo=bio, caption=caption,
+                                    disable_notification=disable_notification)
 
     def cleanup(self, update, context, text):
         # Löscht die zwischengespeicherten Daten eines Users, beim Abbrechen
@@ -445,6 +471,37 @@ class TelegramBot:
                      'Wie viele Fragen hast du richtig beantwortet?')
             update.message.reply_text(reply, reply_markup=ReplyKeyboardRemove())
             return self.MATCHES_PTS1
+
+    def statistics(self, update, context, log_input=True):
+        # Menü für Statistiken (E1)
+        # Aufgerufen über das Hauptmenü
+        chat_id = update.effective_chat.id
+        message = update.message.text
+        if log_input:
+            self.user_input(chat_id, message, True)
+        update.message.reply_text(
+            'Du kannst deine Statistiken mit denen der besten 10 Spieler '
+            'anzeigen lassen!',
+            reply_markup=ReplyKeyboardMarkup(self.keyboards['statistics']))
+        return self.STATISTICS
+
+    def statistics_select(self, update, context):
+        chat_id = update.effective_chat.id
+        message = update.message.text
+        self.user_input(chat_id, message)
+        p_id = self.parent.get_p_id_from_input(self.INPUT_METHOD, chat_id)
+        if not p_id:
+            update.message.reply_text(
+                'Spiel bei der QDLiga mit um auch deine eigenen Statistiken zu '
+                'sehen!',
+                reply_markup=ReplyKeyboardMarkup(self.keyboards['statistics']))
+            image = self.parent.generate_statistics_table(None)
+            self.send_image(chat_id, image)
+        else:
+            image = self.parent.generate_statistics_table(p_id)
+            self.send_image(chat_id, image)
+        self.mainmenu(update, context)
+        return ConversationHandler.END
 
     def account(self, update, context, log_input=True):
         # Menü für Account (E1)
