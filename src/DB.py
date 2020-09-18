@@ -629,3 +629,54 @@ class DB:
             self.log.log_error(('Fehler beim laden eines einzelnen '
                                 'Statistikwerts'), e)
             raise e
+
+    def get_league_info(self, l_id):
+        """Gibt Name, Saison, Anzahl der Spieler, sowie Level der
+        übergebenen Liga zurück"""
+        try:
+            cursor = self.conn.cursor()
+            command = '''
+                SELECT Name, Season, Players, Level
+                FROM League
+                WHERE L_ID = ?
+                '''
+            cursor.execute(command, (l_id,))
+            return cursor.fetchone()
+        except BaseException as e:
+            self.log.log_error('Fehler beim laden der Ligen', e)
+            raise e
+
+    def get_league_max_level(self, season):
+        """Gibt den maximalen Liga-Level der übergebenen Saison aus"""
+        try:
+            cursor = self.conn.cursor()
+            command = '''
+                SELECT MAX(Level)
+                FROM League
+                WHERE Season = ?
+                '''
+            cursor.execute(command, (season,))
+            return cursor.fetchone()[0]
+        except BaseException as e:
+            self.log.log_error('Fehler beim laden des maximalen Liga-Levels', e)
+            raise e
+
+    def get_username(self, p_id):
+        """Gibt den Nutzernamen des übergebenen Spielers zurück.
+        Liefert None zurück, wenn nicht vorhanden"""
+        try:
+            cursor = self.conn.cursor()
+            command = '''
+                SELECT Username
+                FROM Player
+                WHERE P_ID = ?
+                '''
+            cursor.execute(command, (p_id,))
+            result = cursor.fetchone()
+            if result:
+                return result[0]
+            else:
+                return None
+        except BaseException as e:
+            self.log.log_error('Fehler beim laden des Nutzernamen', e)
+            raise e

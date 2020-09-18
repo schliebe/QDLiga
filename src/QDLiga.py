@@ -518,6 +518,46 @@ class QDLiga:
         enthalten, sofern sich dieser nicht in den Top 10 befindet"""
         return self.mediaGenerator.generate_statistics(p_id)
 
+    def get_league_table(self, l_id):
+        """Gibt die Tabelle der übergebenen Liga zurück"""
+        return self.db.get_league_table(l_id)
+
+    def generate_league_table(self, l_id):
+        """Gibt ein Bild der Liga-Tabelle der übergebenen Liga zurück"""
+        # Daten der Liga laden
+        name, _, _, level = self.db.get_league_info(l_id)
+
+        # Min und Max Level der aktuellen Saison laden
+        min_level = 1
+        max_level = self.db.get_league_max_level(self.season)
+
+        # Bestimmen welche Hintergrundfarben verwendet werden sollen.
+        # Mögliche Werte sind:
+        # 0 - Keine Einfärbung
+        # 1 - Platz 1 wird gold hinterlegt
+        #  (Nur eine Liga)
+        # 2 - Platz 1 wird gold hinterlegt, Platz 7 und 8 rot
+        #  (Mehr als eine Liga, für erste Liga)
+        # 3 - Platz 1 und 2 werden grün hinterlegt
+        #  (Mehr als eine Liga, für letzte Liga)
+        # 4 - Platz 1 und 2 werden grün hinterlegt, Platz 7 und 8 rot
+        #  (Mehr als eine Liga, für weder erste noch letzte Liga)
+        color = 0
+        if max_level == min_level and level == min_level:
+            color = 1
+        elif min_level < max_level and level == min_level:
+            color = 2
+        elif min_level < max_level and level == max_level:
+            color = 3
+        elif min_level < max_level and min_level < level < max_level:
+            color = 4
+
+        return self.mediaGenerator.generate_league_table(l_id, name, color)
+
+    def get_username(self, p_id):
+        """Gibt den Nutzernamen des übergebenen Spielers zurück"""
+        return self.db.get_username(p_id)
+
 
 if __name__ == "__main__":
     QDLiga()
