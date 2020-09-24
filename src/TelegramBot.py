@@ -58,6 +58,7 @@ class TelegramBot:
         self.MATCHES_PTS2 = 103
         self.MATCHES_CONFIRM = 104
         self.MATCHES_VERIFY = 105
+        self.LEAGUE = 200
         self.STATISTICS = 300
         self.ACCOUNT = 400
         self.REGISTER = 410
@@ -122,7 +123,20 @@ class TelegramBot:
         self.dispatcher.add_handler(matches_handler)
 
         # Menü: Liga (E1)
-        # TODO Implementieren
+        league_handler = ConversationHandler(
+            entry_points=[MessageHandler(Filters.regex('^(Liga)$'),
+                                         self.league)],
+            states={
+                self.LEAGUE: [
+                    go_back_handler,
+                    MessageHandler(Filters.regex('^(Tabelle)$'),
+                                   self.league_select),
+                ],
+            },
+            fallbacks=[CommandHandler('cancel', self.cancel)],
+            conversation_timeout=self.TIMEOUT_TIME
+        )
+        self.dispatcher.add_handler(league_handler)
 
         # Menü: Statistiken (E1)
         statistics_handler = ConversationHandler(
@@ -223,6 +237,8 @@ class TelegramBot:
         self.keyboards['main'] = [['Duelle', 'Liga'],
                                   ['Statistiken', 'Account'],
                                   ['Support', 'Mehr']]  # Hauptmenü
+        self.keyboards['league'] = [['Tabelle'],
+                                    ['Zurück']]  # Liga
         self.keyboards['statistics'] = [['Statistik anzeigen'],
                                         ['Zurück']]  # Statistiken
         self.keyboards['account'] = [['Registrieren', 'Status ändern'],
@@ -471,6 +487,40 @@ class TelegramBot:
                      'Wie viele Fragen hast du richtig beantwortet?')
             update.message.reply_text(reply, reply_markup=ReplyKeyboardRemove())
             return self.MATCHES_PTS1
+
+    def league(self, update, context, log_input=True):
+        # Menü für Liga (E1)
+        # Aufgerufen über das Hauptmenü
+        chat_id = update.effective_chat.id
+        message = update.message.text
+        if log_input:
+            self.user_input(chat_id, message, True)
+        # Daten von Spieler und Liga laden
+        p_id = self.parent.get_p_id_from_input(self.INPUT_METHOD, chat_id)
+        l_id = self.parent.get_player_league(p_id)
+        if l_id:
+            self.user[chat_id]['l_id'] = l_id
+            name, season, _, _ = self.parent.get_league_info(l_id)
+            update.message.reply_text(
+                'Saison {}\n'
+                'Du spielst in {}'.format(season, name),
+                reply_markup=ReplyKeyboardMarkup(self.keyboards['league']))
+            return self.LEAGUE
+        else:
+            update.message.reply_text(
+                'Du musst dich in einer aktiven Liga befinden, bevor du diese '
+                'aufrufen kannst!')
+            self.mainmenu(update, context)
+            return ConversationHandler.END
+
+    def league_select(self, update, context):
+        chat_id = update.effective_chat.id
+        message = update.message.text
+        self.user_input(chat_id, message)
+        l_id = self.user[chat_id]['l_id']
+        image = self.parent.generate_league_table(l_id)
+        self.send_image(chat_id, image)
+        return ConversationHandler.LEAGUE
 
     def statistics(self, update, context, log_input=True):
         # Menü für Statistiken (E1)

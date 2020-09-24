@@ -412,7 +412,17 @@ class QDLiga:
     def is_currently_playing(self, p_id):
         """Gibt zurück, ob der übergebene Spieler aktuell in einer Liga spielt
         oder nicht"""
+        # TODO durch get_player_league() ersetzen
         return self.db.is_in_league(p_id, self.season)
+
+    def get_player_league(self, p_id, season=None):
+        """Gibt zurück, in welcher Liga der übergebene Spieler in der
+        angegebenen Saison (None, wenn aktuelle Saison) gespielt hat.
+        Gibt None zurück, falls Spieler in keiner Liga gespielt hat"""
+        if season:
+            return self.db.get_player_league(p_id, season)
+        else:
+            return self.db.get_player_league(p_id, self.season)
 
     def get_active_matches(self, p_id):
         """Gibt eine Liste der aktuellen Duelle eines Spielers zurück.
@@ -557,6 +567,11 @@ class QDLiga:
     def get_username(self, p_id):
         """Gibt den Nutzernamen des übergebenen Spielers zurück"""
         return self.db.get_username(p_id)
+
+    def get_league_info(self, l_id):
+        """Gibt Name, Saison, Anzahl der Spieler, sowie Level der
+        übergebenen Liga zurück"""
+        return self.db.get_league_info(l_id)
 
 
 if __name__ == "__main__":

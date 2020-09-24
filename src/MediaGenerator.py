@@ -261,7 +261,6 @@ class MediaGenerator:
 
         return league
 
-
     def init_statistics(self):
         # Pixelgenauer Plan in doc/media/Statistik_Tabelle.pdn
 

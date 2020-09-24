@@ -256,6 +256,7 @@ class DB:
     def is_in_league(self, p_id, season):
         """Überprüft ob der Spieler mit der übergebenen ID in der angegebenen
         Saison in einer Liga gespielt hat"""
+        # TODO durch get_player_league() ersetzen
         try:
             cursor = self.conn.cursor()
             command = '''
@@ -273,6 +274,29 @@ class DB:
         except BaseException as e:
             self.log.log_error('Fehler beim überprüfen der Ligazugehörigkeit',
                                e)
+            raise e
+
+    def get_player_league(self, p_id, season):
+        """Gibt die L_ID der Liga zurück, in der der Spieler in der angegebenen
+        Saison gespielt hat.
+        Gibt None zurück, falls Spieler in keiner Liga gespielt hat"""
+        try:
+            cursor = self.conn.cursor()
+            command = '''
+                 SELECT *
+                 FROM InLeague
+                 WHERE Player = ?
+                 AND League IN (SELECT L_ID
+                                FROM League
+                                WHERE Season = ?)'''
+            cursor.execute(command, (p_id, season))
+            l_id = cursor.fetchone()
+            if l_id:  # Wenn Ergebnis nicht leer, Spieler in Liga
+                return l_id[0]
+            else:
+                return None
+        except BaseException as e:
+            self.log.log_error('Fehler beim laden der Ligazugehörigkeit', e)
             raise e
 
     def add_to_league(self, l_id, p_id):
@@ -643,7 +667,7 @@ class DB:
             cursor.execute(command, (l_id,))
             return cursor.fetchone()
         except BaseException as e:
-            self.log.log_error('Fehler beim laden der Ligen', e)
+            self.log.log_error('Fehler beim laden der Liga', e)
             raise e
 
     def get_league_max_level(self, season):
