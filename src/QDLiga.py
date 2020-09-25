@@ -13,7 +13,7 @@ class QDLiga:
         def load_token():
             # Lade Tokens aus Token.txt
             tokens = {'Telegram_Bot_Token': ''}  # Default Werte
-            file = open('..\\Token.txt', 'r')
+            file = open('../Token.txt', 'r')
             for line in file:
                 key, value = line.split('=', 1)
                 tokens[key] = value
@@ -409,6 +409,22 @@ class QDLiga:
         else:
             self.log.log_error('Spieler hat keine TelegramID')
 
+    def message_support(self, message):
+        # TODO Mit Support korrekt implementieren! Nur für den Testlauf genutzt
+
+        # Nutzer aus SupportUser.txt lesen, die Meldungen erhalten sollen
+        support = []
+        file = open('../SupportUser.txt', 'r')
+        for line in file:
+            support.append(line.strip())
+        file.close()
+
+        # Versenden über Telegram an alle festgelegten Support-Nutzer
+        for telegramID in support:
+            print('Send Support Message: "{}" to {}'.format(message, telegramID))
+            support_message = '~~~SUPPORT~~~\n{}\n~~~SUPPORT~~~'.format(message)
+            self.telegramBot.send_message(telegramID, support_message)
+
     def is_currently_playing(self, p_id):
         """Gibt zurück, ob der übergebene Spieler aktuell in einer Liga spielt
         oder nicht"""
@@ -439,6 +455,7 @@ class QDLiga:
     def submit_result(self, m_id, p_id, res1, res2):
         """Lädt das aktuelle Ergebnis des Duells aus der Datenbank und überprüft
         wie das übergebene Ergebnis angewendet werden soll.
+        Zudem wird auch der Gegner informiert.
         Status 0: Ergebnis in Datenbank eintragen, Status je nach Spieler auf
             1 bzw. 2 setzen
         Status 1/2: Ergebnis mit Ergebnis in der Datenbank abgleichen.
@@ -477,11 +494,19 @@ class QDLiga:
                 if from_p1:
                     self.db.update_match(
                         m_id, res1, res2, pts_for, pts_against, 1)
-                    # TODO Gegenspieler benachrichtigen
+                    # Gegenspieler benachrichtigen
+                    self.message_player(
+                        p2,
+                        'Dein Gegner hat ein Ergebnis eingetragen. Du kannst '
+                        'es im Duelle-Menü bestätigen!')
                 else:
                     self.db.update_match(
                         m_id, res2, res1, pts_against, pts_for, 2)
-                    # TODO Gegenspieler benachrichtigen
+                    # Gegenspieler benachrichtigen
+                    self.message_player(
+                        p1,
+                        'Dein Gegner hat ein Ergebnis eingetragen. Du kannst '
+                        'es im Duelle-Menü bestätigen!')
             # Spieler 2 bestätigt oder korrigiert Ergebnis von Spieler 1
             elif verified == 1 and not from_p1:
                 if res1 == r2 and res2 == r1:
@@ -491,7 +516,14 @@ class QDLiga:
                     # Ergebnis korrigiert, Status auf 4 setzen
                     # Admin benachrichtigen, Problem zu lösen
                     self.db.update_match(m_id, r1, r2, pts1, pts2, 4)
-                    # TODO Anfrage an Support weiterleiten
+                    # TODO Anfrage an Support korrekt weiterleiten
+                    self.message_support(
+                        'Eingegebenes Ergebnis unterscheidet sich!\n'
+                        'M_ID: {}\n'
+                        'Vorheriges Ergebnis: {}:{}\n'
+                        'Neu eingetragenes Ergebnis: {}:{}\n'
+                        'Eingetragen von: {}'
+                        .format(m_id, r1, r2, res2, res1, p_id))
             # Spieler 1 bestätigt oder korrigiert Ergebnis von Spieler 2
             elif verified == 2 and from_p1:
                 if res1 == r1 and res2 == r2:
@@ -502,6 +534,13 @@ class QDLiga:
                     # Admin benachrichtigen um Problem zu lösen
                     self.db.update_match(m_id, r1, r2, pts1, pts2, 5)
                     # TODO Anfrage an Support weiterleiten
+                    self.message_support(
+                        'Eingegebenes Ergebnis unterscheidet sich!\n'
+                        'M_ID: {}\n'
+                        'Vorheriges Ergebnis: {}:{}\n'
+                        'Neu eingetragenes Ergebnis: {}:{}\n'
+                        'Eingetragen von: {}'
+                        .format(m_id, r1, r2, res1, res2, p_id))
             else:
                 self.log.log_error(('Ungewünschter Status des zu ändernden '
                                    'Duells'))
