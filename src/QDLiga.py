@@ -174,7 +174,10 @@ class QDLiga:
         self.db.set_time_settings(self.season, self.round)
         self.log.log_info('Start von Saison {}'.format(self.season))
         self.log.log_info('Start der Hinrunde')
-        # TODO Benachrichtigung an Spieler?
+        # Benachrichtigung an Spieler
+        self.notify_active_players(
+            'Die Hinrunde ist gestartet!\n'
+            'Du findest deine aktuellen Spiele im Duelle Menü.')
 
     def week2(self):
         # Ende der Hinrunde, Start der Rückrunde
@@ -182,7 +185,10 @@ class QDLiga:
         self.db.set_time_settings(self.season, self.round)
         self.log.log_info('Ende der Hinrunde')
         self.log.log_info('Start der Rückrunde')
-        # TODO Benachrichtigung an Spieler?
+        # Benachrichtigung an Spieler
+        self.notify_active_players(
+            'Die Hinrunde ist beendet und die Rückrunde ist gestartet!\n'
+            'Du findest deine aktuellen Spiele im Duelle Menü.')
 
     def week3(self):
         # Ende der Rückrunde, Start der Pause-Woche
@@ -190,7 +196,10 @@ class QDLiga:
         self.db.set_time_settings(self.season, self.round)
         self.log.log_info('Ende der Rückrunde')
         self.log.log_info('Start der Pause-Woche')
-        # TODO Benachrichtigung an Spieler?
+        # Benachrichtigung an Spieler
+        self.notify_active_players(
+            'Die Rückrunde ist beendet!\n'
+            'Die vorläufigen Ergebnisse können im Liga Menü angesehen werden.')
 
     def create_game_schedule(self, player_list):
         """Liefert einen Spielplan einer Liga im (Double) Round Robin Format.
@@ -533,7 +542,7 @@ class QDLiga:
                     # Ergebnis korrigiert, Status auf 5 setzen
                     # Admin benachrichtigen um Problem zu lösen
                     self.db.update_match(m_id, r1, r2, pts1, pts2, 5)
-                    # TODO Anfrage an Support weiterleiten
+                    # TODO Anfrage an Support korrekt weiterleiten
                     self.message_support(
                         'Eingegebenes Ergebnis unterscheidet sich!\n'
                         'M_ID: {}\n'
@@ -611,6 +620,21 @@ class QDLiga:
         """Gibt Name, Saison, Anzahl der Spieler, sowie Level der
         übergebenen Liga zurück"""
         return self.db.get_league_info(l_id)
+
+    def get_active_players(self, season=None):
+        """Gibt eine Liste mit den P_IDs aller Spieler aus, die aktuell in einer
+        Liga spielen"""
+        if season:
+            return self.db.get_active_players(season)
+        else:
+            return self.db.get_active_players(self.season)
+
+    def notify_active_players(self, message):
+        """Sendet eine Nachricht an alle Spieler, die sich aktuell in einer
+        Liga befinden"""
+        players = self.get_active_players()
+        for p in players:
+            self.message_player(p, message)
 
 
 if __name__ == "__main__":

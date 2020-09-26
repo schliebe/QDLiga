@@ -704,3 +704,24 @@ class DB:
         except BaseException as e:
             self.log.log_error('Fehler beim laden des Nutzernamen', e)
             raise e
+
+    def get_active_players(self, season):
+        """Gibt eine Liste aller Spieler aus, die in der angegebenen Saison in
+        einer Liga gespielt haben"""
+        try:
+            cursor = self.conn.cursor()
+            command = '''
+                SELECT Player
+                FROM InLeague
+                WHERE League IN (SELECT L_ID
+                                 FROM League
+                                 WHERE Season = ?)
+                        '''
+            cursor.execute(command, (season,))
+            players = []
+            for p in cursor.fetchall():
+                players.append(p[0])
+            return players
+        except BaseException as e:
+            self.log.log_error('Fehler beim laden der aktiven Spieler', e)
+            raise e

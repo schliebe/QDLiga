@@ -9,7 +9,7 @@ Die Datenbank befindet sich im Hauptordner in der Datei 'QDLiga.db'
 - [InLeague](#inleague "InLeague")
 - [Match](#match "Match")
 - [Settings](#settings "Settings")
-- [TimeEvents](#timeevents "TimeEvents")
+- [Events](#events "Events")
 - [sqlite_sequence](#sqlite_sequence "sqlite_sequence")
 
 ---
