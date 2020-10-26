@@ -258,6 +258,8 @@ class TelegramBot:
                                       disable_notification=disable_notification)
 
     def send_image(self, chat_id, image, caption=None, disable_notification=False):
+        # Versendet ein übergebenes PIL-Bild an den Nutzer und fügt,
+        # sofern übergeben, eine Bildunterschrift hinzu
         bio = BytesIO()
         bio.name = 'image.png'
         image.save(bio, 'PNG')
@@ -316,10 +318,8 @@ class TelegramBot:
         chat_id = update.effective_chat.id
         message = update.message.text
         # self.user_input(chat_id, message, check_user=True)
-        text = 'Willkommen in der QDLiga!\n' \
-               'Hier entsteht der Telegram-Bot um die QDLiga zu nutzen.\n' \
-               'Bisher kannst du dich schon im Menü "Account" registrieren!\n' \
-               'Komm bitte bald wieder, um den fertigen Bot zu nutzen!'
+        text = ('Willkommen in der QDLiga!\n'
+                'Was möchtest du tun?')
         update.message.reply_text(
             text, reply_markup=ReplyKeyboardMarkup(self.keyboards['main']))
 
@@ -342,8 +342,10 @@ class TelegramBot:
         self.user[chat_id]['p_id'] = p_id
         if not self.parent.is_currently_playing(p_id):
             update.message.reply_text(
-                ('Du spielst momentan in keiner Liga mit. Warte bitte bis zum '
-                 'Ende der aktuellen Saison, bevor es los gehen kann!'))
+                ('Du spielst momentan in keiner Liga mit.\n'
+                 'Gehe sicher, dass dein Status im Account-Menü auf Aktiv '
+                 'gesetzt ist und warte bitte bis zum Start der nächsten '
+                 'Saison, um mitspielen zu können!'))
             self.mainmenu(update, context)
             return ConversationHandler.END
         else:
@@ -365,7 +367,7 @@ class TelegramBot:
                     matches_keyboard.append([m[2]])
             self.user[chat_id]['active_matches'] = active_matches
             matches_keyboard.append(['Zurück'])
-            color_legend = ('[⚪️]: Duell muss noch eingetragen werden\n'
+            color_legend = ('[⚪️]: Kein Ergebnis eingetragen\n'
                             '[🟢]: Duell beendet\n'
                             '[🟡]: Ergebnis bestätigen\n'
                             '[⚫️]: Warten auf den Gegner\n'
@@ -509,7 +511,10 @@ class TelegramBot:
         else:
             update.message.reply_text(
                 'Du musst dich in einer aktiven Liga befinden, bevor du diese '
-                'aufrufen kannst!')
+                'aufrufen kannst!\n'
+                'Gehe sicher, dass dein Status im Account-Menü auf Aktiv '
+                'gesetzt ist und warte bitte bis zum Start der nächsten '
+                'Saison, um mitspielen zu können!')
             self.mainmenu(update, context)
             return ConversationHandler.END
 
@@ -530,8 +535,8 @@ class TelegramBot:
         if log_input:
             self.user_input(chat_id, message, True)
         update.message.reply_text(
-            'Du kannst deine Statistiken mit denen der besten 10 Spieler '
-            'anzeigen lassen!',
+            'Du kannst dir deine Statistiken zusammen mit den besten 10 '
+            'Spielern anzeigen lassen!',
             reply_markup=ReplyKeyboardMarkup(self.keyboards['statistics']))
         return self.STATISTICS
 
@@ -543,7 +548,8 @@ class TelegramBot:
         if not p_id:
             update.message.reply_text(
                 'Spiel bei der QDLiga mit um auch deine eigenen Statistiken zu '
-                'sehen!',
+                'sehen!\n'
+                'Du kannst dich dazu im Account-Menü registrieren.',
                 reply_markup=ReplyKeyboardMarkup(self.keyboards['statistics']))
             image = self.parent.generate_statistics_table(None)
             self.send_image(chat_id, image)
@@ -593,7 +599,7 @@ class TelegramBot:
         self.user_input(chat_id, message)
         if message == 'Ja':
             update.message.reply_text(
-                'Gib bitte deinen QD Nutzernamen ein!',
+                'Gib bitte deinen QD-Nutzernamen ein!',
                 reply_markup=ReplyKeyboardRemove())
             return self.REGISTER_NAME
         else:

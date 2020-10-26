@@ -177,7 +177,8 @@ class QDLiga:
         # Benachrichtigung an Spieler
         self.notify_active_players(
             'Die Hinrunde ist gestartet!\n'
-            'Du findest deine aktuellen Spiele im Duelle Menü.')
+            'Du hast 7 Tage Zeit deine Duelle zu spielen. Deine aktuellen '
+            'Spiele findest du im Duelle Menü.')
 
     def week2(self):
         # Ende der Hinrunde, Start der Rückrunde
@@ -188,7 +189,8 @@ class QDLiga:
         # Benachrichtigung an Spieler
         self.notify_active_players(
             'Die Hinrunde ist beendet und die Rückrunde ist gestartet!\n'
-            'Du findest deine aktuellen Spiele im Duelle Menü.')
+            'Du hast 7 Tage Zeit deine Duelle zu spielen. Deine aktuellen '
+            'Spiele findest du im Duelle Menü.')
 
     def week3(self):
         # Ende der Rückrunde, Start der Pause-Woche
@@ -377,8 +379,8 @@ class QDLiga:
             elif last == 0:
                 # Spieler bleibt in Warteliste
                 if next == 0:
-                    text = ('Leider sind nicht genügend Spieler vorhanden. Du '
-                            'befindest dich auch in der nächsten Saison '
+                    text = ('Leider sind nicht genügend Spieler vorhanden. '
+                            'Du befindest dich auch in der nächsten Saison '
                             'weiterhin auf der Warteliste!')
                 # Spieler steigt aus Warteliste auf
                 else:
@@ -386,9 +388,9 @@ class QDLiga:
                             'Viel Erfolg!').format(next_name)
             else:
                 if next == 0:
-                    text = ('Leider sind nicht genügend Spieler vorhanden. Du '
-                            'befindest dich für nächste Saison auf der '
-                            'Warteliste!')
+                    text = ('Leider sind nicht genügend Spieler vorhanden. '
+                            'Du befindest dich auch in der nächsten Saison '
+                            'weiterhin auf der Warteliste!')
                 elif last == next:
                     text = ('Du hälst deine Liga und spielst nächste Saison in '
                             '{}. Viel Erfolg!').format(next_name)
