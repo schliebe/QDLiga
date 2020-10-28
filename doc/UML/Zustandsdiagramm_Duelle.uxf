@@ -6,7 +6,7 @@
     <coordinates>
       <x>14</x>
       <y>14</y>
-      <w>686</w>
+      <w>798</w>
       <h>1386</h>
     </coordinates>
     <panel_attributes>Duelle
@@ -760,5 +760,135 @@ bg=yellow</panel_attributes>
     </coordinates>
     <panel_attributes>lt=&lt;-</panel_attributes>
     <additional_attributes>10.0;30.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLObject</id>
+    <coordinates>
+      <x>280</x>
+      <y>280</y>
+      <w>210</w>
+      <h>28</h>
+    </coordinates>
+    <panel_attributes>Gegner antwortet nicht
+bg=gray</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>224</x>
+      <y>280</y>
+      <w>84</w>
+      <h>42</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-</panel_attributes>
+    <additional_attributes>40.0;10.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>476</x>
+      <y>280</y>
+      <w>112</w>
+      <h>42</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-</panel_attributes>
+    <additional_attributes>60.0;10.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLObject</id>
+    <coordinates>
+      <x>560</x>
+      <y>252</y>
+      <w>238</w>
+      <h>126</h>
+    </coordinates>
+    <panel_attributes>Welcher deiner Gegner
+hat nicht geantwortet?
+Der Spieler erhällt
+anschließend eine
+Benachrichtigung
+bg=yellow</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>658</x>
+      <y>364</y>
+      <w>42</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-</panel_attributes>
+    <additional_attributes>10.0;30.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLState</id>
+    <coordinates>
+      <x>574</x>
+      <y>406</y>
+      <w>196</w>
+      <h>56</h>
+    </coordinates>
+    <panel_attributes>MATCHES_REMIND</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLObject</id>
+    <coordinates>
+      <x>630</x>
+      <y>490</y>
+      <w>84</w>
+      <h>28</h>
+    </coordinates>
+    <panel_attributes>[Name]
+bg=gray</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>658</x>
+      <y>448</y>
+      <w>42</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-</panel_attributes>
+    <additional_attributes>10.0;30.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLObject</id>
+    <coordinates>
+      <x>574</x>
+      <y>546</y>
+      <w>196</w>
+      <h>56</h>
+    </coordinates>
+    <panel_attributes>Dein Gegner wurde
+benachrichtigt!
+bg=yellow</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>658</x>
+      <y>504</y>
+      <w>42</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-</panel_attributes>
+    <additional_attributes>10.0;30.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>658</x>
+      <y>588</y>
+      <w>42</w>
+      <h>798</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-</panel_attributes>
+    <additional_attributes>10.0;550.0;10.0;180.0;10.0;10.0</additional_attributes>
   </element>
 </diagram>

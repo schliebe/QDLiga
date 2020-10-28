@@ -58,6 +58,7 @@ class TelegramBot:
         self.MATCHES_PTS2 = 103
         self.MATCHES_CONFIRM = 104
         self.MATCHES_VERIFY = 105
+        self.MATCHES_REMIND = 110
         self.LEAGUE = 200
         self.STATISTICS = 300
         self.ACCOUNT = 400
@@ -97,6 +98,8 @@ class TelegramBot:
             states={
                 self.MATCHES_SELECT: [
                     go_back_handler,
+                    MessageHandler(Filters.regex('^(Gegner antwortet nicht)$'),
+                                   self.matches_remind),
                     MessageHandler(Filters.text, self.matches_select),
                 ],
                 self.MATCHES_PTS1: [
@@ -112,6 +115,11 @@ class TelegramBot:
                 self.MATCHES_VERIFY: [
                     MessageHandler(Filters.regex('^(Ja|Nein)$'),
                                    self.matches_verify)
+                ],
+                self.MATCHES_REMIND: [
+                    go_back_handler,
+                    MessageHandler(Filters.text,
+                                   self.matches_send_reminder),
                 ],
                 self.TIMEOUT: [
                     MessageHandler(None, self.timeout)
@@ -366,6 +374,7 @@ class TelegramBot:
                     active_matches[m[2]] = m
                     matches_keyboard.append([m[2]])
             self.user[chat_id]['active_matches'] = active_matches
+            matches_keyboard.append(['Gegner antwortet nicht'])
             matches_keyboard.append(['Zurück'])
             color_legend = ('[⚪️]: Kein Ergebnis eingetragen\n'
                             '[🟢]: Duell beendet\n'
@@ -489,6 +498,53 @@ class TelegramBot:
                      'Wie viele Fragen hast du richtig beantwortet?')
             update.message.reply_text(reply, reply_markup=ReplyKeyboardRemove())
             return self.MATCHES_PTS1
+
+    def matches_remind(self, update, context):
+        # Liste der Gegner anzeigen die Benachrichtigt werden können
+        chat_id = update.effective_chat.id
+        message = update.message.text
+        self.user_input(chat_id, message)
+        # Schreibe nur Spieler mit verified = 0 in die Liste
+        opponent_keyboard = []
+        for m in self.user[chat_id]['active_matches']:
+            op = self.user[chat_id]['active_matches'][m]
+            if op[5] == 0:
+                opponent_keyboard.append([m])
+        opponent_keyboard.append(['Zurück'])
+        update.message.reply_text(
+            ('Welcher deiner Gegner hat nicht geantwortet?\n'
+             'Der Spieler erhällt anschließend eine Benachrichtigung.'),
+            reply_markup=ReplyKeyboardMarkup(opponent_keyboard))
+        return self.MATCHES_REMIND
+
+    def matches_send_reminder(self, update, context):
+        # Sendet dem übergebenen Spieler eine Benachrichtigung, sofern zwischen
+        # beiden Spielern ein Duell mit verified = 0 (noch kein Ergebnis) läuft
+        chat_id = update.effective_chat.id
+        message = update.message.text
+        if message in self.user[chat_id]['active_matches']:
+            match = self.user[chat_id]['active_matches'][message]
+            # Spieler benachrichtigen
+            m_id = match[0]
+            opponent_p_id = match[1]
+            player_name = self.parent.get_username(self.user[chat_id]['p_id'])
+            reminder_text = (
+                'Erinnerung:\n'
+                'Dein Gegner "{}" möchte dich daran erinnern, dass ihr noch '
+                'gegeneinander antreten müsst. Nur wenn alle Duelle gespielt '
+                'werden, macht es auch wirklich Spaß!').format(player_name)
+            self.parent.message_player(opponent_p_id, reminder_text)
+
+            update.message.reply_text(
+                'Eine Benachrichtigung wurde gesendet!',
+                reply_markup=ReplyKeyboardRemove())
+            self.user[chat_id].pop('active_matches', None)
+            self.mainmenu(update, context)
+            return ConversationHandler.END
+        else:
+            update.message.reply_text(
+                'Der eingegebene Spieler konnte nicht gefunden, oder '
+                'benachrichtigt werden. Bitte versuch es noch einmal.')
 
     def league(self, update, context, log_input=True):
         # Menü für Liga (E1)

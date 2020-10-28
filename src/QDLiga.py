@@ -407,6 +407,7 @@ class QDLiga:
                     print('player_info', player_info)
                     continue
             self.message_player(p, text)
+        self.log.log_info('Regroup beendet')
 
     def message_player(self, p_id, message):
         # TODO Wie soll benachrichtigt werden? Momentan nur Telegram
