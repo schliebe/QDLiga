@@ -20,6 +20,11 @@ class QDLiga:
             file.close()
             return tokens
 
+        def check_required_directories():
+            import pathlib
+            # match_data Ordner erstellen, sofern nicht vorhanden
+            pathlib.Path('../match_data').mkdir(exist_ok=True)
+
         self.PTS_WIN = 5
         self.PTS_DRAW = 3
         self.PTS_LOSE = 1
@@ -30,6 +35,9 @@ class QDLiga:
 
         # Tokens laden
         token = load_token()
+
+        # Benötigte Ordner erstellen, falls nötig
+        check_required_directories()
 
         # Alle Module mit entsprechenden Referenzen laden
         self.log.log_info('Starte QDLiga...')
