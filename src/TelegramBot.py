@@ -536,10 +536,9 @@ class TelegramBot:
             self.parent.message_player(opponent_p_id, reminder_text)
 
             # Benachrichtigung in Spiel-Log-Datei loggen
-            file = open('../match_data/{}.txt'.format(m_id), 'a')
-            file.write('Spiel-Erinnerung von {} an {}.\n\n'
+            self.parent.save_to_match_data(
+                m_id, 'Spiel-Erinnerung von {} an {}.'
                        .format(self.user[chat_id]['p_id'], opponent_p_id))
-            file.close()
 
             update.message.reply_text(
                 'Eine Benachrichtigung wurde gesendet!',

@@ -199,6 +199,7 @@ class QDLiga:
             'Die Hinrunde ist beendet und die Rückrunde ist gestartet!\n'
             'Du hast 7 Tage Zeit deine Duelle zu spielen. Deine aktuellen '
             'Spiele findest du im Duelle Menü.')
+        self.clear_match_data()
 
     def week3(self):
         # Ende der Rückrunde, Start der Pause-Woche
@@ -210,6 +211,7 @@ class QDLiga:
         self.notify_active_players(
             'Die Rückrunde ist beendet!\n'
             'Die vorläufigen Ergebnisse können im Liga Menü angesehen werden.')
+        self.clear_match_data()
 
     def create_game_schedule(self, player_list):
         """Liefert einen Spielplan einer Liga im (Double) Round Robin Format.
@@ -519,6 +521,9 @@ class QDLiga:
                         p2,
                         'Dein Gegner hat ein Ergebnis eingetragen. Du kannst '
                         'es im Duelle-Menü bestätigen!')
+                    self.save_to_match_data(
+                        m_id, 'Ergebnis von {} eingetragen: {} - {}:{} - {}'
+                              .format(p1, p1, res1, res2, p2))
                 else:
                     self.db.update_match(
                         m_id, res2, res1, pts_against, pts_for, 2)
@@ -527,15 +532,24 @@ class QDLiga:
                         p1,
                         'Dein Gegner hat ein Ergebnis eingetragen. Du kannst '
                         'es im Duelle-Menü bestätigen!')
+                    self.save_to_match_data(
+                        m_id, 'Ergebnis von {} eingetragen: {} - {}:{} - {}'
+                              .format(p2, p1, res1, res2, p2))
             # Spieler 2 bestätigt oder korrigiert Ergebnis von Spieler 1
             elif verified == 1 and not from_p1:
                 if res1 == r2 and res2 == r1:
                     # Ergebnis bestätigt, Status auf 3 setzen
                     self.db.update_match(m_id, r1, r2, pts1, pts2, 3)
+                    self.save_to_match_data(
+                        m_id, 'Ergebnis von {} bestätigt: {} - {}:{} - {}'
+                              .format(p2, p1, res1, res2, p2))
                 else:
                     # Ergebnis korrigiert, Status auf 4 setzen
                     # Admin benachrichtigen, Problem zu lösen
                     self.db.update_match(m_id, r1, r2, pts1, pts2, 4)
+                    self.save_to_match_data(
+                        m_id, 'Korrigiertes Ergebnis von {}: {} - {}:{} - {}'
+                              .format(p2, p1, res1, res2, p2))
                     # TODO Anfrage an Support korrekt weiterleiten
                     self.message_support(
                         'Eingegebenes Ergebnis unterscheidet sich!\n'
@@ -549,10 +563,16 @@ class QDLiga:
                 if res1 == r1 and res2 == r2:
                     # Ergebnis bestätigt, Status auf 3 setzen
                     self.db.update_match(m_id, r1, r2, pts1, pts2, 3)
+                    self.save_to_match_data(
+                        m_id, 'Ergebnis von {} bestätigt: {} - {}:{} - {}'
+                              .format(p1, p1, res1, res2, p2))
                 else:
                     # Ergebnis korrigiert, Status auf 5 setzen
                     # Admin benachrichtigen um Problem zu lösen
                     self.db.update_match(m_id, r1, r2, pts1, pts2, 5)
+                    self.save_to_match_data(
+                        m_id, 'Korrigiertes Ergebnis von {}: {} - {}:{} - {}'
+                              .format(p1, p1, res1, res2, p2))
                     # TODO Anfrage an Support korrekt weiterleiten
                     self.message_support(
                         'Eingegebenes Ergebnis unterscheidet sich!\n'
@@ -646,6 +666,25 @@ class QDLiga:
         players = self.get_active_players()
         for p in players:
             self.message_player(p, message)
+
+    def save_to_match_data(self, m_id, text):
+        # Entsprechende match_data Datei öffnen (match_data/[m_id].txt)
+        # Wird angelegt, wenn nicht bereits vorhanden
+        file = open('../match_data/{}.txt'.format(m_id), 'a')
+        file.write('{}\n\n'.format(text))
+        file.close()
+
+    def clear_match_data(self):
+        import os
+        match_data = os.listdir('../match_data')
+        for data in match_data:
+            if data.endswith('.txt'):
+                m_id = data[:-4]
+                match = self.db.load_match(m_id)
+                if match[9] == 3:
+                    print(match)
+                    os.remove('../match_data/{}'.format(data))
+        self.log.log_info('Nicht benötigte Match Data gelöscht.')
 
 
 if __name__ == "__main__":
