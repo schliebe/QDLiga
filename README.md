@@ -13,8 +13,27 @@ Die QD-Liga ist ein automatisches Ligasystem für eine bekannte Quizapp. Die Spi
 
 ---
 ### Changelog
-##### v0.0 (16.08.2019)
-- 
+##### v0.1 - Alpha Test 1 (07.11.2020)
+- 6 Module angelegt:
+  - QDLiga
+    - Verarbeiten aller wichtigen Informationen
+    - Bindeglied zwischen Eingabe (TelegramBot) und Datenbank
+  - Datenbank
+    - Tabellen für alle wichtigen Daten
+    - Automatische Statistik-Liste als View
+  - TelegramBot
+    - Account anlegen und Status ändern
+    - Duelle anzeigen und eintragen
+    - Liga-Tabelle generieren und ausgeben lassen
+    - Statistik-Tabelle generieren und ausgeben lassen
+    - Tutorial ausgeben lassen
+  - Logger
+  - EventTimer
+    - Events aus Datenbank lesen und zum richtigen Zeitpunkt ausführen
+  - MediaGenerator
+    - Generieren von Liga-Tabellen
+    - Generieren der Gesamtstatistik
+- Umfangreiche Dokumentation erstellt
 
 ---
 ### Dokumentation
