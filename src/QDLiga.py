@@ -256,7 +256,10 @@ class QDLiga:
 
         # Liga-Ergebnisse vorheriger Saison laden
         # Liste aller L_IDs der aktuellen Saison
-        l_ids = self.db.get_all_leagues(self.season)
+        if self.season == 0:
+            l_ids = []
+        else:
+            l_ids = self.db.get_all_leagues(self.season)
         leagues = []
         # Für jede Liga die Tabelle abrufen und eintragen
         for l in l_ids:
