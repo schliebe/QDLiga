@@ -46,7 +46,7 @@ class TelegramBot:
     def add_all_handler(self):
         # Handler registrieren
         # CommandHandler
-        start_handler = CommandHandler('start', self.mainmenu)
+        start_handler = CommandHandler('start', self.start)
         self.dispatcher.add_handler(start_handler)
         tutorial_handler = CommandHandler('tutorial', self.tutorial)
         self.dispatcher.add_handler(tutorial_handler)
@@ -344,7 +344,6 @@ class TelegramBot:
 
     def mainmenu(self, update, context):
         # Hauptmenü
-        # Aufgerufen mit /start
         # Anzeigen der weiteren Menüpunkte
         chat_id = update.effective_chat.id
         message = update.message.text
@@ -353,6 +352,16 @@ class TelegramBot:
                 'Was möchtest du tun?')
         update.message.reply_text(
             text, reply_markup=ReplyKeyboardMarkup(self.keyboards['main']))
+
+    def start(self, update, context):
+        # Hauptmenü, aber aufgerufen mit /start
+        # Sendet Begrüßungs-Text und leitet an Hauptmenü weiter
+        update.message.reply_text(
+            'Bist du das erste Mal hier?\n'
+            'Dann wirf doch mit "/tutorial" einen Blick auf das Tutorial, oder '
+            'registriere dich im "Account"-Menü um mitspielen zu können!\n'
+            'Viel Spaß!')
+        self.mainmenu(update, context)
 
     def matches(self, update, context):
         # Menü für Duelle (E1)
