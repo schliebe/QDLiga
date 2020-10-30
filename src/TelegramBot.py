@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import telegram
 from telegram import (ReplyKeyboardMarkup, ReplyKeyboardRemove)
 from telegram.ext import (Updater, CommandHandler, MessageHandler,
                           ConversationHandler, Filters)
@@ -47,6 +48,8 @@ class TelegramBot:
         # CommandHandler
         start_handler = CommandHandler('start', self.mainmenu)
         self.dispatcher.add_handler(start_handler)
+        tutorial_handler = CommandHandler('tutorial', self.tutorial)
+        self.dispatcher.add_handler(tutorial_handler)
         # ConversationHandler
         self.add_conversationhandler()
 
@@ -70,6 +73,7 @@ class TelegramBot:
         self.STATUS_YESNO = 421
         self.STATUS_CHOOSE = 422
         self.STATUS_CONFIRM = 423
+        self.MORE = 600
 
         self.TIMEOUT = ConversationHandler.TIMEOUT
 
@@ -236,7 +240,24 @@ class TelegramBot:
         # TODO Implementieren
 
         # Menü: Mehr (E1)
-        # TODO Implementieren
+        more_handler = ConversationHandler(
+            entry_points=[MessageHandler(Filters.regex('^(Mehr)$'),
+                                         self.more)],
+            states={
+                self.TIMEOUT: [
+                    MessageHandler(None, self.timeout)
+                ],
+                self.MORE: [
+                    go_back_handler,
+                    MessageHandler(Filters.regex('^(Tutorial)$'),
+                                   self.tutorial)
+                ],
+            },
+            fallbacks=[CommandHandler('cancel', self.cancel)],
+            map_to_parent={},
+            conversation_timeout=self.TIMEOUT_TIME
+        )
+        self.dispatcher.add_handler(more_handler)
 
     def create_keyboards(self):
         # Speichert alle möglichen Keyboards, sodass diese nicht immer neu
@@ -251,6 +272,8 @@ class TelegramBot:
                                         ['Zurück']]  # Statistiken
         self.keyboards['account'] = [['Registrieren', 'Status ändern'],
                                      ['Zurück']]  # Account
+        self.keyboards['mehr'] = [['Tutorial'],
+                                  ['Zurück']]  # Tutorial
         self.keyboards['status'] = [['Aktiv', 'Inaktiv']]  # Status ändern
 
     def stop(self):
@@ -811,3 +834,114 @@ class TelegramBot:
                 'Versuch es einfach nochmal!')
             self.user[chat_id].pop('status', None)
             return self.account(update, context, False)  # Zurück zum Account-Menü
+
+    def more(self, update, context):
+        # Menü für Mehr (E1)
+        # Aufgerufen über das Hauptmenü
+        chat_id = update.effective_chat.id
+        message = update.message.text
+        self.user_input(chat_id, message)
+        update.message.reply_text(
+            'Schau mal, was es hier noch zu sehen gibt:',
+            reply_markup=ReplyKeyboardMarkup(self.keyboards['mehr']))
+        return self.MORE
+
+    def tutorial(self, update, context):
+        # Versendet das Tutorial
+        chat_id = update.effective_chat.id
+        message = update.message.text
+        self.user_input(chat_id, message)
+
+        # Formatierung des Textes durch HTML-Tags:
+        # https://core.telegram.org/bots/api#html-style
+        self.updater.bot.send_message(
+            chat_id,
+            'In der <b>QDLiga</b> treten Spieler gegeneinander an um ihr Wissen auf '
+            'die Probe zu stellen und sich miteinander zu messen.',
+            parse_mode=telegram.ParseMode.HTML,
+            disable_notification=True)
+        self.updater.bot.send_message(
+            chat_id,
+            'Die Spieler sind in Ligen von je 8 Spielern aufgeteilt, in denen '
+            'jeder gegen jeden in einer Hin- und einer Rückrunde antritt. '
+            'Am Ende jeder Saison steigen die besten Spieler einer Liga in die '
+            'nächst höhere Liga auf, die letzten Spieler der Liga steigen ab.',
+            parse_mode=telegram.ParseMode.HTML,
+            disable_notification=True)
+        self.updater.bot.send_message(
+            chat_id,
+            '<u>Eine Saison dauert 3 Wochen</u>\n'
+            'Woche 1: Hinrunde\n'
+            'Woche 2: Rückrunde\n'
+            'Woche 3: Pause',
+            parse_mode=telegram.ParseMode.HTML,
+            disable_notification=True)
+        self.updater.bot.send_message(
+            chat_id,
+            'Nach jedem Duell erhalten die Spieler Punkte. Diese werden '
+            'zusammengerechnet und ergeben das Gesamtergebnis der Liga.\n\n'
+            '<u>Die Punkteverteilung sieht wie folgt aus:</u>\n\n'
+            '<b>5 Punkte</b> für einen Sieg\n'
+            '<b>3 Punkte</b> für ein Unentschieden\n'
+            '<b>1 Punkt</b> für eine Niederlage\n'
+            '<b>0 Punkte</b>, wenn ein Spieler das Duell nicht spielt',
+            parse_mode=telegram.ParseMode.HTML,
+            disable_notification=True)
+        self.updater.bot.send_message(
+            chat_id,
+            '<u>Dieser Telegram Bot ist in unterschiedliche Menüs aufgeteilt:</u>',
+            parse_mode=telegram.ParseMode.HTML,
+            disable_notification=True)
+        self.updater.bot.send_message(
+            chat_id,
+            'In "<b>Duelle</b>" sind alle aktuellen Duelle aufgelistet, die gespielt '
+            'werden müssen.\n'
+            'Hier müssen auch die Ergebnisse der Duelle eingetragen werden, '
+            'nachdem diese beendet wurden.',
+            parse_mode=telegram.ParseMode.HTML,
+            disable_notification=True)
+        self.updater.bot.send_message(
+            chat_id,
+            'In "<b>Liga</b>" kann die aktuelle Tabelle der Liga angezeigt werden.',
+            parse_mode=telegram.ParseMode.HTML,
+            disable_notification=True)
+        self.updater.bot.send_message(
+            chat_id,
+            'In "<b>Statistiken</b>" können die globalen Statistiken der besten '
+            'Spieler, sowie auch die eingenen Statistiken angezeigt werden.',
+            parse_mode=telegram.ParseMode.HTML,
+            disable_notification=True)
+        self.updater.bot.send_message(
+            chat_id,
+            'In "<b>Account</b>" könnt ihr euch für die QDLiga registrieren.\n'
+            'Um mitzuspielen müsst ihr euren QD-Namen eingeben und euren '
+            'Teilnahmestatus auf Aktiv setzen und ihr seid am Start der '
+            'nächsten Saison mit dabei!',
+            parse_mode=telegram.ParseMode.HTML,
+            disable_notification=True)
+        self.updater.bot.send_message(
+            chat_id,
+            '<i>Das "<b>Support</b>"-Menü ist für diesen Testlauf noch nicht bereit.\n'
+            'Wenn ihr Probleme habt, meldet euch einfach beim Admin :)</i>',
+            parse_mode=telegram.ParseMode.HTML,
+            disable_notification=True)
+        # TODO Support-Menü beschreiben, wenn fertig
+        self.updater.bot.send_message(
+            chat_id,
+            'In "<b>Mehr</b>" findet ihr alles Andere, wie auch dieses Tutorial.',
+            parse_mode=telegram.ParseMode.HTML,
+            disable_notification=True)
+        self.updater.bot.send_message(
+            chat_id,
+            'Sollte noch etwas unklar sein, oder hast du noch Probleme?\n'
+            'Melde dich einfach bei mir und wir klären das!',
+            parse_mode=telegram.ParseMode.HTML,
+            disable_notification=True)
+        self.updater.bot.send_message(
+            chat_id,
+            'Worauf wartest du jetzt noch?\n\n'
+            'Um dich anzumelden, besuche das "<b>Account</b>"-Menü und gib unter '
+            '"<b>Registrieren</b>" deinen QD-Namen ein!\n\n'
+            'Die QDLiga und alle Teilnehmer freuen sich schon darauf sich mit '
+            'dir zu messen und Spaß zu haben!',
+            parse_mode=telegram.ParseMode.HTML)
