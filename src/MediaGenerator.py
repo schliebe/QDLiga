@@ -8,6 +8,14 @@ class MediaGenerator:
     def __init__(self, parent):
         self.parent = parent
 
+        # Auf True setzen, wenn auf Linux verwendet
+        # Schrift wird um etwa 7px nach unten verschoben, wenn auf Linux
+        self.using_linux = True
+        if self.using_linux:
+            self.offset = -7
+        else:
+            self.offset = 0
+
         # Schriftarten anlegen
         self.font = {}
         self.init_font()
@@ -65,8 +73,8 @@ class MediaGenerator:
 
         # Text auf Bild schreiben
         draw = ImageDraw.Draw(top)
-        draw.text((26, 20), '#', font=self.font['bs_32'])
-        draw.text((86, 20), 'Name', font=self.font['bs_32'])
+        draw.text((26, 20 + self.offset), '#', font=self.font['bs_32'])
+        draw.text((86, 20 + self.offset), 'Name', font=self.font['bs_32'])
 
         # Linien auf Bild zeichnen
         draw.line([(477, 10), (477, 61)], width=3)
@@ -102,14 +110,14 @@ class MediaGenerator:
 
         # Text auf Bild schreiben
         draw = ImageDraw.Draw(legend)
-        draw.text((70, 84), 'Duelle', font=self.font['bs_26_cond'])
-        draw.text((70, 138), 'Siege', font=self.font['bs_26_cond'])
-        draw.text((70, 192), 'Unentschieden', font=self.font['bs_26_cond'])
-        draw.text((70, 246), 'Niederlagen', font=self.font['bs_26_cond'])
-        draw.text((70, 300), 'Nicht gespielt', font=self.font['bs_26_cond'])
-        draw.text((70, 354), 'Richtige Fragen', font=self.font['bs_26_cond'])
-        draw.text((70, 408), 'Perfekte Spiele', font=self.font['bs_26_cond'])
-        draw.text((70, 462), 'Punkte', font=self.font['bs_26_cond'])
+        draw.text((70, 84 + self.offset), 'Duelle', font=self.font['bs_26_cond'])
+        draw.text((70, 138 + self.offset), 'Siege', font=self.font['bs_26_cond'])
+        draw.text((70, 192 + self.offset), 'Unentschieden', font=self.font['bs_26_cond'])
+        draw.text((70, 246 + self.offset), 'Niederlagen', font=self.font['bs_26_cond'])
+        draw.text((70, 300 + self.offset), 'Nicht gespielt', font=self.font['bs_26_cond'])
+        draw.text((70, 354 + self.offset), 'Richtige Fragen', font=self.font['bs_26_cond'])
+        draw.text((70, 408 + self.offset), 'Perfekte Spiele', font=self.font['bs_26_cond'])
+        draw.text((70, 462 + self.offset), 'Punkte', font=self.font['bs_26_cond'])
 
         # Linien auf Bild zeichnen
         draw.line([(7, 10), (7, 509)], width=3)
@@ -181,45 +189,45 @@ class MediaGenerator:
             # Position
             (x, _) = draw.textsize('{}.'.format(place), font=self.font['bs_32'])
             xpos = 10 + max((60 - x) // 2, 0)
-            draw.text((xpos, 6), '{}.'.format(place), font=self.font['bs_32'])
+            draw.text((xpos, 6 + self.offset), '{}.'.format(place), font=self.font['bs_32'])
             # Name
             (x, _) = draw.textsize(username, font=self.font['bs_26'])
             if x < 385:
-                draw.text((85, 9), username, font=self.font['bs_26'])
+                draw.text((85, 9 + self.offset), username, font=self.font['bs_26'])
             else:
-                draw.text((85, 9), username, font=self.font['bs_26_cond'])
+                draw.text((85, 9 + self.offset), username, font=self.font['bs_26_cond'])
             # Duelle
             (x, _) = draw.textsize(str(elem[1]), font=self.font['bs_32'])
             xpos = 485 + (48 - x)
-            draw.text((xpos, 6), str(elem[1]), font=self.font['bs_32'])
+            draw.text((xpos, 6 + self.offset), str(elem[1]), font=self.font['bs_32'])
             # Siege
             (x, _) = draw.textsize(str(elem[2]), font=self.font['bs_32'])
             xpos = 548 + (48 - x)
-            draw.text((xpos, 6), str(elem[2]), font=self.font['bs_32'])
+            draw.text((xpos, 6 + self.offset), str(elem[2]), font=self.font['bs_32'])
             # Unentschieden
             (x, _) = draw.textsize(str(elem[3]), font=self.font['bs_32'])
             xpos = 611 + (48 - x)
-            draw.text((xpos, 6), str(elem[3]), font=self.font['bs_32'])
+            draw.text((xpos, 6 + self.offset), str(elem[3]), font=self.font['bs_32'])
             # Niederlagen
             (x, _) = draw.textsize(str(elem[4]), font=self.font['bs_32'])
             xpos = 674 + (48 - x)
-            draw.text((xpos, 6), str(elem[4]), font=self.font['bs_32'])
+            draw.text((xpos, 6 + self.offset), str(elem[4]), font=self.font['bs_32'])
             # Nicht gespielt
             (x, _) = draw.textsize(str(elem[5]), font=self.font['bs_32'])
             xpos = 737 + (48 - x)
-            draw.text((xpos, 6), str(elem[5]), font=self.font['bs_32'])
+            draw.text((xpos, 6 + self.offset), str(elem[5]), font=self.font['bs_32'])
             # Richtige Fragen
             (x, _) = draw.textsize(str(elem[6]), font=self.font['bs_32'])
             xpos = 800 + (72 - x)
-            draw.text((xpos, 6), str(elem[6]), font=self.font['bs_32'])
+            draw.text((xpos, 6 + self.offset), str(elem[6]), font=self.font['bs_32'])
             # Perfekte Spiele
             (x, _) = draw.textsize(str(elem[7]), font=self.font['bs_32'])
             xpos = 887 + (48 - x)
-            draw.text((xpos, 6), str(elem[7]), font=self.font['bs_32'])
+            draw.text((xpos, 6 + self.offset), str(elem[7]), font=self.font['bs_32'])
             # Punkte
             (x, _) = draw.textsize(str(elem[8]), font=self.font['bs_32'])
             xpos = 950 + (48 - x)
-            draw.text((xpos, 6), str(elem[8]), font=self.font['bs_32'])
+            draw.text((xpos, 6 + self.offset), str(elem[8]), font=self.font['bs_32'])
 
             return stat
 
@@ -257,7 +265,7 @@ class MediaGenerator:
         draw = ImageDraw.Draw(league)
         (x, _) = draw.textsize(name, font=self.font['bs_32'])
         xpos = 1013 + (277 - x) // 2
-        draw.text((xpos, 16), name, font=self.font['bs_32'])
+        draw.text((xpos, 16 + self.offset), name, font=self.font['bs_32'])
 
         return league
 
@@ -291,8 +299,8 @@ class MediaGenerator:
 
         # Text auf Bild schreiben
         draw = ImageDraw.Draw(top)
-        draw.text((26, 20), '#', font=self.font['bs_32'])
-        draw.text((86, 20), 'Name', font=self.font['bs_32'])
+        draw.text((26, 20 + self.offset), '#', font=self.font['bs_32'])
+        draw.text((86, 20 + self.offset), 'Name', font=self.font['bs_32'])
 
         # Linien auf Bild zeichnen
         draw.line([(477, 10), (477, 61)], width=3)
@@ -328,14 +336,14 @@ class MediaGenerator:
 
         # Text auf Bild schreiben
         draw = ImageDraw.Draw(legend)
-        draw.text((67, 9), 'Duelle', font=self.font['bs_26'])
-        draw.text((240, 9), 'Siege', font=self.font['bs_26'])
-        draw.text((399, 9), 'Unentschieden', font=self.font['bs_26'])
-        draw.text((707, 9), 'Niederlagen', font=self.font['bs_26'])
-        draw.text((970, 9), 'Nicht gespielt', font=self.font['bs_26'])
-        draw.text((67, 59), 'Richtige Fragen', font=self.font['bs_26'])
-        draw.text((388, 59), 'Perfekte Spiele', font=self.font['bs_26'])
-        draw.text((704, 59), 'Punkte', font=self.font['bs_26'])
+        draw.text((67, 9 + self.offset), 'Duelle', font=self.font['bs_26'])
+        draw.text((240, 9 + self.offset), 'Siege', font=self.font['bs_26'])
+        draw.text((399, 9 + self.offset), 'Unentschieden', font=self.font['bs_26'])
+        draw.text((707, 9 + self.offset), 'Niederlagen', font=self.font['bs_26'])
+        draw.text((970, 9 + self.offset), 'Nicht gespielt', font=self.font['bs_26'])
+        draw.text((67, 59 + self.offset), 'Richtige Fragen', font=self.font['bs_26'])
+        draw.text((388, 59 + self.offset), 'Perfekte Spiele', font=self.font['bs_26'])
+        draw.text((704, 59 + self.offset), 'Punkte', font=self.font['bs_26'])
 
         self.statistics['legend'] = legend
 
@@ -363,45 +371,45 @@ class MediaGenerator:
             # Position
             (x, _) = draw.textsize('{}.'.format(place), font=self.font['bs_32'])
             xpos = 10 + max((60 - x) // 2, 0)
-            draw.text((xpos, 3), '{}.'.format(place), font=self.font['bs_32'])
+            draw.text((xpos, 3 + self.offset), '{}.'.format(place), font=self.font['bs_32'])
             # Name
             (x, _) = draw.textsize(elem[1], font=self.font['bs_26'])
             if x < 385:
-                draw.text((85, 6), elem[1], font=self.font['bs_26'])
+                draw.text((85, 6 + self.offset), elem[1], font=self.font['bs_26'])
             else:
-                draw.text((85, 6), elem[1], font=self.font['bs_26_cond'])
+                draw.text((85, 6 + self.offset), elem[1], font=self.font['bs_26_cond'])
             # Duelle
             (x, _) = draw.textsize(str(elem[2]), font=self.font['bs_32'])
             xpos = 485 + (72 - x)
-            draw.text((xpos, 3), str(elem[2]), font=self.font['bs_32'])
+            draw.text((xpos, 3 + self.offset), str(elem[2]), font=self.font['bs_32'])
             # Siege
             (x, _) = draw.textsize(str(elem[3]), font=self.font['bs_32'])
             xpos = 572 + (72 - x)
-            draw.text((xpos, 3), str(elem[3]), font=self.font['bs_32'])
+            draw.text((xpos, 3 + self.offset), str(elem[3]), font=self.font['bs_32'])
             # Unentschieden
             (x, _) = draw.textsize(str(elem[4]), font=self.font['bs_32'])
             xpos = 659 + (72 - x)
-            draw.text((xpos, 3), str(elem[4]), font=self.font['bs_32'])
+            draw.text((xpos, 3 + self.offset), str(elem[4]), font=self.font['bs_32'])
             # Niederlagen
             (x, _) = draw.textsize(str(elem[5]), font=self.font['bs_32'])
             xpos = 746 + (72 - x)
-            draw.text((xpos, 3), str(elem[5]), font=self.font['bs_32'])
+            draw.text((xpos, 3 + self.offset), str(elem[5]), font=self.font['bs_32'])
             # Nicht gespielt
             (x, _) = draw.textsize(str(elem[6]), font=self.font['bs_32'])
             xpos = 833 + (72 - x)
-            draw.text((xpos, 3), str(elem[6]), font=self.font['bs_32'])
+            draw.text((xpos, 3 + self.offset), str(elem[6]), font=self.font['bs_32'])
             # Richtige Fragen
             (x, _) = draw.textsize(str(elem[7]), font=self.font['bs_32'])
             xpos = 920 + (96 - x)
-            draw.text((xpos, 3), str(elem[7]), font=self.font['bs_32'])
+            draw.text((xpos, 3 + self.offset), str(elem[7]), font=self.font['bs_32'])
             # Perfekte Spiele
             (x, _) = draw.textsize(str(elem[8]), font=self.font['bs_32'])
             xpos = 1031 + (48 - x)
-            draw.text((xpos, 3), str(elem[8]), font=self.font['bs_32'])
+            draw.text((xpos, 3 + self.offset), str(elem[8]), font=self.font['bs_32'])
             # Punkte
             (x, _) = draw.textsize(str(elem[9]), font=self.font['bs_32'])
             xpos = 1094 + (96 - x)
-            draw.text((xpos, 3), str(elem[9]), font=self.font['bs_32'])
+            draw.text((xpos, 3 + self.offset), str(elem[9]), font=self.font['bs_32'])
 
             return stat
 
