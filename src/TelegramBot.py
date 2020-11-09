@@ -414,7 +414,7 @@ class TelegramBot:
                             '[⚫️]: Warten auf den Gegner\n'
                             '[🔴]: Problem beim Eintragen\n')
             reply = ('Legende:\n{}\nDeine aktuellen Gegner sind:\n{}\n'
-                     'Welches Ergebnis möchtest du eintragen?').format(
+                     'Welches Endergebnis möchtest du eintragen?').format(
                 color_legend, match_list)
             update.message.reply_text(
                 reply, reply_markup=ReplyKeyboardMarkup(matches_keyboard))
@@ -618,7 +618,7 @@ class TelegramBot:
         l_id = self.user[chat_id]['l_id']
         image = self.parent.generate_league_table(l_id)
         self.send_image(chat_id, image)
-        return ConversationHandler.LEAGUE
+        return self.LEAGUE
 
     def statistics(self, update, context, log_input=True):
         # Menü für Statistiken (E1)
@@ -906,7 +906,9 @@ class TelegramBot:
             'In "<b>Duelle</b>" sind alle aktuellen Duelle aufgelistet, die gespielt '
             'werden müssen.\n'
             'Hier müssen auch die Ergebnisse der Duelle eingetragen werden, '
-            'nachdem diese beendet wurden.',
+            'nachdem diese beendet wurden.\n'
+            'Das Eintragen von Zwischenergebnissen ist nicht nötig, nur das '
+            'Endergebnis wird benötigt.',
             parse_mode=telegram.ParseMode.HTML,
             disable_notification=True)
         self.updater.bot.send_message(
