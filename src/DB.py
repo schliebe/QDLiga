@@ -162,7 +162,7 @@ class DB:
             cursor = self.conn.cursor()
             command = '''
             INSERT INTO Player (Username, Status) 
-            VALUES (?, 0)
+            VALUES (?, 1)
             '''
             cursor.execute(command, (username,))
             self.conn.commit()
