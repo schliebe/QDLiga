@@ -543,6 +543,11 @@ class QDLiga:
                 if res1 == r2 and res2 == r1:
                     # Ergebnis bestätigt, Status auf 3 setzen
                     self.db.update_match(m_id, r1, r2, pts1, pts2, 3)
+                    # Gegenspieler benachrichtigen
+                    self.message_player(
+                        p1,
+                        'Dein Gegner hat ein Ergebnis bestätigt und das Duell '
+                        'damit beendet.')
                     self.save_to_match_data(
                         m_id, 'Ergebnis von {} bestätigt: {} - {}:{} - {}'
                               .format(p2, p1, res1, res2, p2))
@@ -566,6 +571,11 @@ class QDLiga:
                 if res1 == r1 and res2 == r2:
                     # Ergebnis bestätigt, Status auf 3 setzen
                     self.db.update_match(m_id, r1, r2, pts1, pts2, 3)
+                    # Gegenspieler benachrichtigen
+                    self.message_player(
+                        p2,
+                        'Dein Gegner hat ein Ergebnis bestätigt und das Duell '
+                        'damit beendet.')
                     self.save_to_match_data(
                         m_id, 'Ergebnis von {} bestätigt: {} - {}:{} - {}'
                               .format(p1, p1, res1, res2, p2))
