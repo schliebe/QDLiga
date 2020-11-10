@@ -26,21 +26,29 @@ class EventTimer:
         # Zeit nach der sich Events wiederholen
         self.REPEAT_TIME = datetime.timedelta(days=21)  # 21 Tage bzw. 3 Wochen
 
+        # Zeitpunkt an dem tägliche Events stattfinden sollen
+        self.daily_timestamp = datetime.time(hour=12)  # 12 Uhr mittags
+
         # Liste aller Events laden
         self.event_list = []
         self.load_event_list()
 
         # Scheduler für Events
         self.scheduler = sched.scheduler(time.time, time.sleep)
+        # Scheduler für tägliche Events
+        self.scheduler_daily = sched.scheduler(time.time, time.sleep)
 
         # Nächstes anstehendes Event
         self.current = None
 
         # Startet den EventTimer
-        self.thread = Thread(target=self.start)
+        self.thread = Thread(target=self.start)  # Events aus DB
         self.thread.daemon = True  # Beendet den Thread mit dem Programm
+        self.thread_daily = Thread(target=self.start_daily)  # Tägliches Event
+        self.thread_daily.daemon = True
         self.running = True
         self.thread.start()
+        self.thread_daily.start()
 
     def start(self):
         """Nimmt das Event mit dem nächstliegenden Timestamp und startet
@@ -165,3 +173,22 @@ class EventTimer:
                 pytz.utc.normalize(new_time), '%Y-%m-%d %H:%M:%S')
             # Datenbankeintrag erneuern
             self.db.replace_event(old_time, event, new_time)
+
+    def start_daily(self):
+        """Startet einen Scheduler, der täglich zum selben Zeitpunkt ein Event
+        auslöst"""
+        # Ersten Timestamp aus aktuellem Datum und Ziel-Zeit berechnen
+        daily_timestamp = self.timezone.localize(datetime.datetime.combine(
+            datetime.date.today(), self.daily_timestamp))
+        # Ist dieser bereits vergangen, Timestamp für den nächsten Tag setzen
+        if daily_timestamp < self.timezone.localize(datetime.datetime.now()):
+            daily_timestamp = self.add_time_offset(
+                daily_timestamp, datetime.timedelta(days=1))
+        while self.running:
+            # Löse das tägliche Event jeden Tag zum selben Zeitpunkt aus
+            self.current_daily = self.scheduler_daily.enterabs(
+                daily_timestamp.timestamp(), 0, self.parent.daily_reminder)
+            self.scheduler_daily.run()
+            # Setze neuen Timestamp auf die gleiche Zeit am folgenden Tag
+            daily_timestamp = self.add_time_offset(
+                daily_timestamp, datetime.timedelta(days=1))

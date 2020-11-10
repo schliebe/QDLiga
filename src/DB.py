@@ -725,3 +725,26 @@ class DB:
         except BaseException as e:
             self.log.log_error('Fehler beim laden der aktiven Spieler', e)
             raise e
+
+    def get_unconfirmed_matches(self):
+        """Gibt eine Liste der aktiven Duelle zurück, die eingetragen, aber
+        noch nicht vom Gegner bestätigt wurden (also verified = 1 oder 2)"""
+        try:
+            cursor = self.conn.cursor()
+            command = '''
+                SELECT M_ID, P1, P2, Verified
+                FROM Match
+                WHERE Round = (SELECT Round FROM Settings)
+                AND League IN (SELECT L_ID
+                               FROM League
+                               WHERE Season = (SELECT Season FROM Settings))
+                AND (Verified = 1 OR Verified = 2)
+                        '''
+            cursor.execute(command,)
+            matches = []
+            for row in cursor.fetchall():
+                matches.append((row[0], row[1], row[2], row[3]))
+            return matches
+        except BaseException as e:
+            self.log.log_error('Fehler beim laden der unbestätigten Duelle', e)
+            raise e

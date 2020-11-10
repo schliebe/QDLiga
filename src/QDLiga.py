@@ -699,6 +699,26 @@ class QDLiga:
                     os.remove('../match_data/{}'.format(data))
         self.log.log_info('Nicht benötigte Match Data gelöscht.')
 
+    def daily_reminder(self):
+        # Jeder Spieler, der noch ein Duell bestätigen muss erhällt eine kurze
+        # Benachrichtigung
+        # TODO überprüfen, ob offene Support-Tickets (sobald vorhanden)
+        matches = self.db.get_unconfirmed_matches()
+        notify_list = set()
+        for match in matches:
+            # Wenn verified = 1: Spieler 2 hat noch nicht bestätigt
+            if match[3] == 1:
+                notify_list.add(match[2])
+            # Wenn verified = 2: Spieler 1 hat noch nicht bestätigt
+            elif match[3] == 2:
+                notify_list.add(match[1])
+
+        for p_id in notify_list:
+            self.message_player(p_id, 'Erinnerung:\n'
+                                      'Du hast noch nicht alle Ergebnisse '
+                                      'bestätigt, die von deinen Gegnern '
+                                      'eingetragen wurden!')
+
 
 if __name__ == "__main__":
     QDLiga()
