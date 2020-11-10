@@ -92,6 +92,8 @@ class TelegramBot:
             map_to_parent={},
             conversation_timeout=self.TIMEOUT_TIME
         )
+
+        # Durch den Zurück-Button zurück ins Hauptmenü
         go_back_handler = MessageHandler(Filters.regex('^(Zurück)$'),
                                          self.go_back)  # Zurück ins Hauptmenü
 
@@ -258,6 +260,11 @@ class TelegramBot:
             conversation_timeout=self.TIMEOUT_TIME
         )
         self.dispatcher.add_handler(more_handler)
+
+        # Wird der Bot außerhalb des Hauptmenüs gestoppt gibt es keine
+        # Möglichkeit mit Hilfe der Buttons zurück zu gelangen.
+        # Ist ein Zurück-Button vorhanden, kann dieser dazu genutzt werden
+        self.dispatcher.add_handler(go_back_handler)
 
     def create_keyboards(self):
         # Speichert alle möglichen Keyboards, sodass diese nicht immer neu
