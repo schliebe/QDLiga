@@ -100,6 +100,31 @@ class QDLiga:
                          'P_ID eingeben: ')
             message = input('Welche Nachricht senden?\n')
             self.message_player(p_id, message)
+        elif text == '/setresult':  # Trägt ein Ergebnis ein
+            m_id = input('Ergebnis welches Duells festlegen?\n'
+                         'M_ID eingeben: ')
+            match = self.db.load_match(m_id)
+            if match:
+                print('Match {} - Liga {} Runde {}\n'
+                      'Eingetragenes Ergebnis:\n'
+                      '{} - {}:{} - {}'.format(
+                    match[0], match[1], match[2],
+                    match[3], match[5], match[6], match[4]))
+                res1 = input('Ergebnis von {}: '.format(match[3]))
+                res2 = input('Ergebnis von {}: '.format(match[4]))
+                pts1 = input('Punkte für {}: '.format(match[3]))
+                pts2 = input('Punkte für {}: '.format(match[4]))
+                print('Neues Ergebnis:\n'
+                      'Fragen: {}:{}\n'
+                      'Punkte: {}:{}'.format(res1, res2, pts1, pts2))
+                choice = input('Ergebnis eintragen? [J/N]\n'
+                               .format(res1, res2))
+                if choice.lower() == 'j':
+                    self.set_final_result(m_id, res1, res2, pts1, pts2)
+                else:
+                    print('Ergebnis nicht eingetragen')
+            else:
+                print('Duell existiert nicht')
 
     def get_p_id(self, username):
         """Lädt die ID eines Spielers anhand des Nutzernamens aus der
@@ -606,6 +631,38 @@ class QDLiga:
                                    'Duells'))
         else:
             self.log.log_error('Fehler beim laden des Duells')
+
+    def set_final_result(self, m_id, res1, res2, pts1, pts2):
+        """Setzt das finale Ergebnis eines Duells und benachrichtigt die
+        Spieler darüber"""
+        # Ergebnis eintragen
+        self.db.update_match(m_id, res1, res2, pts1, pts2, 3)
+
+        # Spieler benachrichtigen
+        # Match-Daten laden
+        match = self.db.load_match(m_id)
+        _, season, _, _ = self.get_league_info(match[1])
+        if match[2] == 1:
+            round = 'Hinrunde'
+        elif match[2] == 2:
+            round = 'Rückrunde'
+        else:
+            round = '?'
+        p1 = self.get_username(match[3])
+        p2 = self.get_username(match[4])
+        # Nachricht vorbereiten und an beide Spieler versenden
+        message = ('Das Ergebnis deines Duells gegen {} (Saison {}, {}) wurde '
+                   'auf {}:{} festgelegt.\nErhaltene Punkte: {}')
+        self.message_player(match[3],
+                            message.format(p2, season, round, res1, res2, pts1))
+        self.message_player(match[4],
+                            message.format(p1, season, round, res2, res1, pts2))
+
+        # Logging
+        self.log.log_info('Ergebnis für Duell {} mit Ergebnis {}:{} '
+                          'eingetragen'.format(m_id, res1, res2))
+        self.save_to_match_data(
+            m_id, 'Ergebnis {}:{} durch Konsole eingetragen'.format(res1, res2))
 
     def get_stats_top10(self):
         """Gibt die Top 10 der Gesamtstatistik zurück.
