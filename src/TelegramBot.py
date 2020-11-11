@@ -840,7 +840,7 @@ class TelegramBot:
                     'Status wurde erfolgreich geändert!')
                 return self.account(update, context, False)  # Zurück zum Account-Menü
             except BaseException as e:
-                print(str(e))
+                self.log.log_error(str(e))
                 update.message.reply_text(
                     'Fehler beim setzen des Status. Bitte versuch es nochmal!')
                 self.user[chat_id].pop('status', None)

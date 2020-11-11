@@ -416,8 +416,8 @@ class QDLiga:
                 else:
                     self.log.log_error('Fehler beim benachrichtigen eines '
                                        'Spielers')
-                    print('p:', p)
-                    print('player_info', player_info)
+                    self.log.log_error('p:', p)
+                    self.log.log_error('player_info', player_info)
                     continue
             self.message_player(p, text)
         self.log.log_info('Regroup beendet')
@@ -427,7 +427,8 @@ class QDLiga:
 
         # Versenden über Telegram
         chat_id = self.db.get_input_method(p_id, self.telegramBot.INPUT_METHOD)
-        print('Send Message: "{}" to {}'.format(message, p_id))
+
+        self.log.log_info('Sende Nachricht: "{}" an {}'.format(message, p_id))
         if chat_id:
             # Sofern Eingabemethode vorhanden, Nachricht senden
             self.telegramBot.send_message(chat_id, message)
@@ -446,7 +447,8 @@ class QDLiga:
 
         # Versenden über Telegram an alle festgelegten Support-Nutzer
         for telegramID in support:
-            print('Send Support Message: "{}" to {}'.format(message, telegramID))
+            self.log.log_info('Sende Support-Nachricht: "{}" an {}'
+                              .format(message, telegramID))
             support_message = '~~~SUPPORT~~~\n{}\n~~~SUPPORT~~~'.format(message)
             self.telegramBot.send_message(telegramID, support_message)
 
@@ -695,7 +697,6 @@ class QDLiga:
                 m_id = data[:-4]
                 match = self.db.load_match(m_id)
                 if match[9] == 3:
-                    print(match)
                     os.remove('../match_data/{}'.format(data))
         self.log.log_info('Nicht benötigte Match Data gelöscht.')
 
