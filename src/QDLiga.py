@@ -95,6 +95,11 @@ class QDLiga:
         """Überprüft Konsoleneingabe auf bekannte Befehle"""
         if text == '/stop':  # Beendet die QDLiga und alle dazugehörigen Module
             self.stop()
+        elif text == '/message':  # Sendet eine Nachricht an einen Spieler
+            p_id = input('Nachricht an welchen Spieler?\n'
+                         'P_ID eingeben: ')
+            message = input('Welche Nachricht senden?\n')
+            self.message_player(p_id, message)
 
     def get_p_id(self, username):
         """Lädt die ID eines Spielers anhand des Nutzernamens aus der
