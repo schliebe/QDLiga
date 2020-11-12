@@ -36,3 +36,11 @@ Sollten diese Zahlen überschritten werden, muss die Feldbreite angepasst werden
 Ein pixelgenauer Plan befindet sich in [Statistik_Tabelle.pdn](media/Statistik_Tabelle.pdn "Statistik_Tabelle.pdn")
 
 ---
+### Ergebnis-Liste
+Die Ergebnis-Liste zeigt alle Spiele einer Liga (Hin- und Rückrunde). Das Ergebnis ist nur eingetragen, wenn es von beiden Spielern bestätigt wurde.
+
+![Beispiel Ergebnis-Liste](media/MediaGenerator_Ergebnisse.png)
+
+Ein pixelgenauer Plan befindet sich in [Liga_Ergebnisse.pdn](media/Liga_Ergebnisse.pdn "Liga_Ergebnisse.pdn")
+
+---

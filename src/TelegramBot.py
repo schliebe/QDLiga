@@ -143,7 +143,7 @@ class TelegramBot:
             states={
                 self.LEAGUE: [
                     go_back_handler,
-                    MessageHandler(Filters.regex('^(Tabelle)$'),
+                    MessageHandler(Filters.regex('^(Tabelle|Ergebnisse)$'),
                                    self.league_select),
                 ],
             },
@@ -274,6 +274,7 @@ class TelegramBot:
                                   ['Statistiken', 'Account'],
                                   ['Support', 'Mehr']]  # Hauptmenü
         self.keyboards['league'] = [['Tabelle'],
+                                    ['Ergebnisse'],
                                     ['Zurück']]  # Liga
         self.keyboards['statistics'] = [['Statistik anzeigen'],
                                         ['Zurück']]  # Statistiken
@@ -623,8 +624,16 @@ class TelegramBot:
         message = update.message.text
         self.user_input(chat_id, message)
         l_id = self.user[chat_id]['l_id']
-        image = self.parent.generate_league_table(l_id)
-        self.send_image(chat_id, image)
+
+        if message == 'Tabelle':
+            # Tabelle zurück schicken
+            image = self.parent.generate_league_table(l_id)
+            self.send_image(chat_id, image)
+        elif message == 'Ergebnisse':
+            # Ergebnissliste zurück schicken
+            image = self.parent.generate_result_list(l_id)
+            self.send_image(chat_id, image)
+
         return self.LEAGUE
 
     def statistics(self, update, context, log_input=True):

@@ -788,6 +788,11 @@ class QDLiga:
         else:
             return self.db.get_league_matches(l_id)
 
+    def generate_result_list(self, l_id):
+        """Gibt ein Bild der Ergebnisliste der übergebenen Liga zurück"""
+
+        return self.mediaGenerator.generate_result_list(l_id)
+
 
 if __name__ == "__main__":
     QDLiga()
