@@ -782,6 +782,12 @@ class QDLiga:
                                       'bestätigt, die von deinen Gegnern '
                                       'eingetragen wurden!')
 
+    def get_league_matches(self, l_id, include_names=False):
+        if include_names:
+            return self.db.get_league_matches_with_names(l_id)
+        else:
+            return self.db.get_league_matches(l_id)
+
 
 if __name__ == "__main__":
     QDLiga()

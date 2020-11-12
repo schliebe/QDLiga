@@ -748,3 +748,38 @@ class DB:
         except BaseException as e:
             self.log.log_error('Fehler beim laden der unbestätigten Duelle', e)
             raise e
+
+    def get_league_matches(self, l_id):
+        """Gibt eine Liste aller Duelle der übergebenen Liga zurück."""
+        try:
+            cursor = self.conn.cursor()
+            command = '''
+                SELECT *
+                FROM Match
+                WHERE League = ?
+                '''
+            cursor.execute(command, (l_id,))
+            return cursor.fetchall()
+        except BaseException as e:
+            self.log.log_error('Fehler beim laden der Duelle einer Liga', e)
+            raise e
+
+    def get_league_matches_with_names(self, l_id):
+        """Gibt eine Liste aller Duelle der übergebenen Liga zurück.
+        Zusätzlich sind die Namen der Spieler vorhanden."""
+        try:
+            cursor = self.conn.cursor()
+            command = '''
+                SELECT M_ID, League, Round, P1, P2, Res1, Res2, Pts1, Pts2, Verified, P1_Name, Username AS P2_Name
+                FROM (SELECT M_ID, League, Round, P1, P2, Res1, Res2, Pts1, Pts2, Verified, Username AS P1_Name
+                      FROM Match
+                      INNER JOIN Player ON Match.P1 = Player.P_ID
+                      WHERE League = ?)
+                INNER JOIN Player ON P2 = Player.P_ID
+                '''
+            cursor.execute(command, (l_id,))
+            return cursor.fetchall()
+        except BaseException as e:
+            self.log.log_error('Fehler beim laden der Duelle einer Liga mit '
+                               'Nutzernamen', e)
+            raise e

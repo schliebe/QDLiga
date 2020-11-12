@@ -28,6 +28,10 @@ class MediaGenerator:
         self.statistics = {}
         self.init_statistics()
 
+        # Erstelle alle für die Ergebnisliste benötigten Bilder
+        self.result_list = {}
+        self.init_result_list()
+
     def init_font(self):
         # Achtung: Falsche Benennung der Variation ist ein Bug
         bahnschrift_26 = ImageFont.truetype('../media/bahnschrift.ttf', 36)
@@ -455,3 +459,152 @@ class MediaGenerator:
             height += elem.height
 
         return statistics
+
+    def init_result_list(self):
+        # Pixelgenauer Plan in doc/media/Liga_Ergebnisse.pdn
+
+        # --- Trennlinie generieren ---
+        # Schwarzes 1450x10 Bild generieren
+        line = Image.new('RGBA', (1450, 10), (0, 0, 0))
+        draw = ImageDraw.Draw(line)
+
+        # Linie auf Bild zeichnen
+        draw.line([(10, 4), (1439, 4)], width=4)
+        self.result_list['line'] = line
+
+    def generate_result_list(self, l_id):
+        """Generiert Ergebnisliste der übergebenen Liga"""
+        # Pixelgenauer Plan in doc/media/Liga_Ergebnisse.pdn
+
+        # Liste mit Bildelementen. Diese werden nacheinander unten angefügt
+        img_list = []
+
+        # Liga-Daten laden
+        league, season, _, _, = self.parent.get_league_info(l_id)
+        matches = self.parent.get_league_matches(l_id, include_names=True)
+
+        # Duelle auf Hin- und Rückrunde aufteilen
+        # Duelle in Form: (P1_Name, P2_Name, Res1, Res2, Pts1, Pts2, Verified)
+        round1 = []
+        round2 = []
+        for m in matches:
+            if m[2] == 1:
+                round1.append((m[10], m[11], m[5], m[6], m[7], m[8], m[9]))
+            elif m[2] == 2:
+                round2.append((m[10], m[11], m[5], m[6], m[7], m[8], m[9]))
+
+        # Kopfzeile erstellen und einfügen
+        # Schwarzes 1450x55 Bild generieren
+        head = Image.new('RGBA', (1450, 55), (0, 0, 0))
+        draw = ImageDraw.Draw(head)
+        # Liga und Saison in Kopfzeile schreiben
+        text = 'Saison {} - {}'.format(season, league)
+        x, _ = draw.textsize(text, font=self.font['bs_32'])
+        xpos = (1450 - x) // 2
+        draw.text((xpos, 8 + self.offset), text, font=self.font['bs_32'])
+        img_list.append(head)
+
+        # Trennlinie einfügen
+        img_list.append(self.result_list['line'])
+
+        def create_single_entry(match):
+            name_left = match[0]
+            name_right = match[1]
+            if match[6] == 3:
+                result = '{}:{}'.format(match[2], match[3])
+            else:
+                result = '-:-'
+
+            # Schwarzes 700x45 Bild generieren
+            entry = Image.new('RGBA', (700, 45), (0, 0, 0))
+            draw = ImageDraw.Draw(entry)
+
+            # Spieler 1, rechtsbündig
+            x, _ = draw.textsize(name_left, font=self.font['bs_26'])
+            xpos = 290 - x
+            draw.text((xpos, 4 + self.offset), name_left,
+                      font=self.font['bs_26'])
+            # Ergebnis, mittig
+            x, _ = draw.textsize(result, font=self.font['bs_26'])
+            xpos = 310 + (80 - x) // 2
+            draw.text((xpos, 4 + self.offset), result, font=self.font['bs_26'])
+            # Spieler 2, linksbündig
+            draw.text((410, 4 + self.offset), name_right,
+                      font=self.font['bs_26'])
+
+            return entry
+
+        # Liste Hinrunde erstellen
+        round1_list = []
+        # Überschrift Hinrunde
+        round1_top = Image.new('RGBA', (700, 45), (0, 0, 0))
+        draw = ImageDraw.Draw(round1_top)
+        x, _ = draw.textsize('Hinrunde', font=self.font['bs_32'])
+        xpos = (700 - x) // 2
+        draw.text((xpos, 4 + self.offset), 'Hinrunde', font=self.font['bs_32'])
+        round1_list.append(round1_top)
+        # Einzelne Matches
+        for match in round1:
+            round1_list.append(create_single_entry(match))
+        # Hinrunde-Liste zusammensetzen
+        height = 0
+        for elem in round1_list:
+            height += elem.height
+        # Schwarzes 700xheight Bild generieren
+        round1 = Image.new('RGBA', (700, height), (0, 0, 0))
+        height = 0
+        # Die einzelnen Zeilen untereinander kopieren
+        for elem in round1_list:
+            round1.paste(elem, (0, height))
+            height += elem.height
+
+        # Liste Rückrunde erstellen
+        round2_list = []
+        # Überschrift Hinrunde
+        round2_top = Image.new('RGBA', (700, 45), (0, 0, 0))
+        draw = ImageDraw.Draw(round2_top)
+        x, _ = draw.textsize('Rückrunde', font=self.font['bs_32'])
+        xpos = (700 - x) // 2
+        draw.text((xpos, 4 + self.offset), 'Rückrunde', font=self.font['bs_32'])
+        round2_list.append(round2_top)
+        # Einzelne Matches
+        for match in round2:
+            round2_list.append(create_single_entry(match))
+        # Rückrunde-Liste zusammensetzen
+        height = 0
+        for elem in round2_list:
+            height += elem.height
+        # Schwarzes 700xheight Bild generieren
+        round2 = Image.new('RGBA', (700, height), (0, 0, 0))
+        height = 0
+        # Die einzelnen Zeilen untereinander kopieren
+        for elem in round2_list:
+            round2.paste(elem, (0, height))
+            height += elem.height
+
+        # Beide Listen zusammenfügen
+        height = max(round1.height, round2.height)
+        # Schwarzes 1450xheight Bild generieren
+        rounds = Image.new('RGBA', (1450, height), (0, 0, 0))
+        rounds.paste(round1, (0, 0))
+        rounds.paste(round2, (740, 0))
+        # Trennlinie hinzufügen
+        draw = ImageDraw.Draw(rounds)
+        draw.line([(724, 0), (724, height)], width=4)
+
+        img_list.append(rounds)
+
+        # Finales Bild zusammensetzen
+        height = 0
+        for elem in img_list:
+            height += elem.height
+
+        # Schwarzes 1450xheight Bild generieren
+        result_list = Image.new('RGBA', (1450, height), (0, 0, 0))
+        height = 0
+        # Die einzelnen Zeilen untereinander kopieren
+        for elem in img_list:
+            result_list.paste(elem, (0, height))
+            height += elem.height
+
+        return result_list
