@@ -13,6 +13,16 @@ Die QD-Liga ist ein automatisches Ligasystem für eine bekannte Quizapp. Die Spi
 
 ---
 ### Changelog
+##### v.0.1.1 - Alpha Test 1 Update 1 (15.11.2020)
+- Ergebnisliste zum Liga-Menü hinzugefügt
+- Status wird bei Anmeldung direkt auf aktiv, statt inaktiv gesetzt
+- EventTimer kann täglich zu einer bestimmten Uhrzeit Events auslösen
+  - Täglich um 12 Uhr wird überprüft ob Duelle noch nicht bestätigt wurden
+- Weitere Konsolenbefehle hinzugefügt
+  - /message: Nachricht an einen Spieler senden
+  - /setresult: Ergebnis eines Duells festlegen
+- Weitere kleine Änderungen und Bugfixes
+
 ##### v0.1 - Alpha Test 1 (07.11.2020)
 - 6 Module angelegt:
   - QDLiga
