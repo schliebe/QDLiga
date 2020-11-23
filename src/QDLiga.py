@@ -319,7 +319,7 @@ class QDLiga:
                     player_info[p[0]]['next_league'] = None
                     player_info[p[0]]['next_level'] = None
             for r in rem:
-                # Entsprechende Einträge löschen und durch einen leere Einträge
+                # Entsprechende Einträge löschen und durch leere Einträge
                 # (P_ID = -1) ersetzen
                 players.append(placeholder)
                 players.remove(r)
@@ -330,6 +330,7 @@ class QDLiga:
             for l in range(len(new_leagues)-1):
                 top = new_leagues[l][1]
                 bot = new_leagues[l+1][1]
+                # TODO Eventuell anpassen für mehr als 8 Spieler pro Liga
                 swap_down_1 = top[6]  # Höhere Liga, Platz 7
                 swap_down_2 = top[7]  # Höhere Liga, Platz 8
                 swap_up_1 = bot[0]   # Tiefere Liga, Platz 1
@@ -362,6 +363,7 @@ class QDLiga:
 
         # Einteilung in neue Ligen von oben nach unten in 8er Gruppen
         # Spieler werden bei Einteilung aus Warteliste entfernt
+        # TODO Eventuell anpassen für mehr als 8 Spieler pro Liga
         new_leagues = []
         while len(single_list) >= 8:
             league = []
@@ -371,7 +373,7 @@ class QDLiga:
                     self.db.remove_from_queue(single_list[0])
                 single_list.remove(single_list[0])
             new_leagues.append(league)
-        # Unterste Liga ab 4 Spielern, sonst weiter auf Warteliste
+        # Unterste Liga ab 4 Spielern, sonst übrige Spieler auf Warteliste
         if len(single_list) >= 4:
             league = []
             for i in range(len(single_list)):
@@ -416,7 +418,7 @@ class QDLiga:
             # Spieler spielt nächste Saison nicht mehr
             if next is None:
                 text = ('Du spielst nächste Saison nicht mehr mit. Sobald du '
-                        'wieder teilnehmen möchtest, änder einfach deinen '
+                        'wieder teilnehmen möchtest, ändere einfach deinen '
                         'Status im Account-Menü!')
             # Spieler war in Warteliste
             elif last == 0:
@@ -429,11 +431,12 @@ class QDLiga:
                 else:
                     text = ('Du spielst nächste Saison in {}. '
                             'Viel Erfolg!').format(next_name)
+            # Spieler hat in Liga gespielt
             else:
                 if next == 0:
                     text = ('Leider sind nicht genügend Spieler vorhanden. '
-                            'Du befindest dich auch in der nächsten Saison '
-                            'weiterhin auf der Warteliste!')
+                            'Du befindest dich für nächsten Saison auf der '
+                            'Warteliste!')
                 elif last == next:
                     text = ('Du hälst deine Liga und spielst nächste Saison in '
                             '{}. Viel Erfolg!').format(next_name)
