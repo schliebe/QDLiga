@@ -95,11 +95,13 @@ class QDLiga:
         """Überprüft Konsoleneingabe auf bekannte Befehle"""
         if text == '/stop':  # Beendet die QDLiga und alle dazugehörigen Module
             self.stop()
+
         elif text == '/message':  # Sendet eine Nachricht an einen Spieler
             p_id = input('Nachricht an welchen Spieler?\n'
                          'P_ID eingeben: ')
             message = input('Welche Nachricht senden?\n')
             self.message_player(p_id, message)
+
         elif text == '/setresult':  # Trägt ein Ergebnis ein
             m_id = input('Ergebnis welches Duells festlegen?\n'
                          'M_ID eingeben: ')
@@ -161,6 +163,13 @@ class QDLiga:
                     print('Ergebnis nicht eingetragen')
             else:
                 print('Duell existiert nicht')
+
+        elif text == '/help':  # Zeigt die möglichen Befehle
+            print('Folgende Befehle können genutzt werden:\n'
+                  '/stop: Die QDLiga und alle zugehörigen Module beenden\n'
+                  '/message: Sendet eine Nachricht an einen Spieler\n'
+                  '/setresult: Das Ergebnis eines Duells festlegen\n'
+                  '/help: Diese Liste aufrufen\n')
 
     def get_p_id(self, username):
         """Lädt die ID eines Spielers anhand des Nutzernamens aus der
