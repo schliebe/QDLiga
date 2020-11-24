@@ -164,11 +164,25 @@ class QDLiga:
             else:
                 print('Duell existiert nicht')
 
+        elif text == '/rename':  # Ändert den Nutzernamen eines Spielers
+            username = input('Wessen Nutzername soll geändert werden?\n'
+                             'Nutzername eingeben: ')
+            p_id = self.get_p_id(username)
+            if p_id:
+                new_name = input('Neuen Nutzernamen eingeben:\n')
+                choice = input('Nutzer von "{}" in "{}" umbenennen? [J/N]\n'
+                               .format(username, new_name))
+                if choice.lower() == 'j':
+                    self.rename_user(p_id, new_name)
+            else:
+                print('Nutzer konnte nicht gefunden werden')
+
         elif text == '/help':  # Zeigt die möglichen Befehle
             print('Folgende Befehle können genutzt werden:\n'
                   '/stop: Die QDLiga und alle zugehörigen Module beenden\n'
                   '/message: Sendet eine Nachricht an einen Spieler\n'
                   '/setresult: Das Ergebnis eines Duells festlegen\n'
+                  '/rename: Ändert den Nutzernamen eines Spielers\n'
                   '/help: Diese Liste aufrufen\n')
 
     def get_p_id(self, username):
@@ -838,8 +852,14 @@ class QDLiga:
 
     def generate_result_list(self, l_id):
         """Gibt ein Bild der Ergebnisliste der übergebenen Liga zurück"""
-
         return self.mediaGenerator.generate_result_list(l_id)
+
+    def rename_user(self, p_id, new_name):
+        """Ändert den Nutzernamen des übergebenen Spielers in den neuen Namen"""
+        old_name = self.get_username(p_id)
+        self.db.rename_user(p_id, new_name)
+        self.log.log_info('Name von "{}" (P_ID: {}) in "{}" geändert.'
+                          .format(old_name, p_id, new_name))
 
 
 if __name__ == "__main__":

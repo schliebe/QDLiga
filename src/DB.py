@@ -783,3 +783,19 @@ class DB:
             self.log.log_error('Fehler beim laden der Duelle einer Liga mit '
                                'Nutzernamen', e)
             raise e
+
+    def rename_user(self, p_id, new_name):
+        """Ändert den Nutzernamen des übergebenen Spielers in den übergebenen
+        Namen."""
+        try:
+            cursor = self.conn.cursor()
+            command = '''
+                UPDATE Player
+                SET Username = ?
+                WHERE P_ID = ?
+                '''
+            cursor.execute(command, (new_name, p_id))
+            self.conn.commit()
+        except BaseException as e:
+            self.log.log_error('Fehler beim Ändern des Nutzernamen', e)
+            raise e
