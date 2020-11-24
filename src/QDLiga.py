@@ -103,24 +103,60 @@ class QDLiga:
         elif text == '/setresult':  # Trägt ein Ergebnis ein
             m_id = input('Ergebnis welches Duells festlegen?\n'
                          'M_ID eingeben: ')
-            match = self.db.load_match(m_id)
+            if m_id.isdigit():
+                match = self.db.load_match(m_id)
+            else:
+                match = None
             if match:
+                p1 = self.get_username(match[3])
+                p2 = self.get_username(match[4])
                 print('Match {} - Liga {} Runde {}\n'
                       'Eingetragenes Ergebnis:\n'
-                      '{} - {}:{} - {}'.format(
-                    match[0], match[1], match[2],
-                    match[3], match[5], match[6], match[4]))
-                res1 = input('Ergebnis von {}: '.format(match[3]))
-                res2 = input('Ergebnis von {}: '.format(match[4]))
+                      '{} - {}:{} - {}'.format(match[0], match[1], match[2],
+                                               p1, match[5], match[6], p2))
+                res1 = input('Ergebnis von {}: '.format(p1))
+                res2 = input('Ergebnis von {}: '.format(p2))
                 pts1 = input('Punkte für {}: '.format(match[3]))
                 pts2 = input('Punkte für {}: '.format(match[4]))
+                if not (res1.isdigit() and res2.isdigit() and
+                        pts1.isdigit() and pts2.isdigit()):
+                    print('Unzulässige Eingabe')
+                    return
                 print('Neues Ergebnis:\n'
                       'Fragen: {}:{}\n'
                       'Punkte: {}:{}'.format(res1, res2, pts1, pts2))
-                choice = input('Ergebnis eintragen? [J/N]\n'
-                               .format(res1, res2))
+                choice = input('Ergebnis eintragen? [J/N]\n')
                 if choice.lower() == 'j':
-                    self.set_final_result(m_id, res1, res2, pts1, pts2)
+                    # Überprüfen, ob Punkteverteilung zulässig ist
+                    pts1 = int(pts1)
+                    pts2 = int(pts2)
+                    legal_points = True
+                    if pts1 == 5 and (pts2 < 0 or pts2 > 1):
+                        # 5 Punkte für P1, aber weder 1 noch 0 Punkte für P2
+                        legal_points = False
+                    elif pts1 == 3 and pts2 != 3:
+                        # 3 Punkte für P1, aber nicht 3 Punkte für P2
+                        legal_points = False
+                    elif pts1 == 1 and pts2 != 5:
+                        # 1 Punkt für P1, aber nicht 5 Punkte für P2
+                        legal_points = False
+                    elif pts1 == 0 and pts2 != 5 and pts2 != 0:
+                        # 0 Punkte für P1, aber weder 5, noch 0 Punkte für P2
+                        legal_points = False
+                    elif pts1 != 5 and pts1 != 3 and pts1 != 1 and pts1 != 0:
+                        # P1 bekommt unzulässige Punkte
+                        legal_points = False
+                    # Nachfragen, falls unzulässig
+                    if not legal_points:
+                        choice = input('Punkteverteilung unzulässig. '
+                                       'Trotzdem eintragen? [J/N]\n')
+                        if choice.lower() == 'j':
+                            legal_points = True
+                    # Eintragen, wenn Ergebnis zulässig
+                    if legal_points:
+                        self.set_final_result(m_id, res1, res2, pts1, pts2)
+                    else:
+                        print('Ergebnis nicht eingetragen')
                 else:
                     print('Ergebnis nicht eingetragen')
             else:
