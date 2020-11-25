@@ -746,7 +746,7 @@ class DB:
                 matches.append((row[0], row[1], row[2], row[3]))
             return matches
         except BaseException as e:
-            self.log.log_error('Fehler beim laden der unbestätigten Duelle', e)
+            self.log.log_error('Fehler beim Laden der unbestätigten Duelle', e)
             raise e
 
     def get_league_matches(self, l_id):
@@ -798,4 +798,25 @@ class DB:
             self.conn.commit()
         except BaseException as e:
             self.log.log_error('Fehler beim Ändern des Nutzernamen', e)
+            raise e
+
+    def get_all_running_matches(self):
+        """Gibt eine Liste aller Spiele zurück, die noch nicht bestätigt
+        (also verified != 3) wurden. Zudem werden auch die jeweiligen
+        Nutzernamen der Spieler übergeben.
+        """
+        try:
+            cursor = self.conn.cursor()
+            command = '''
+                SELECT M_ID, League, Round, P1, P2, Res1, Res2, Pts1, Pts2, Verified, P1_Name, Username AS P2_Name
+                FROM (SELECT M_ID, League, Round, P1, P2, Res1, Res2, Pts1, Pts2, Verified, Username AS P1_Name
+                      FROM Match
+                      INNER JOIN Player ON Match.P1 = Player.P_ID
+                      WHERE Verified != 3)
+                INNER JOIN Player ON P2 = Player.P_ID
+                '''
+            cursor.execute(command, )
+            return cursor.fetchall()
+        except BaseException as e:
+            self.log.log_error('Fehler beim Laden aller laufenden Duelle', e)
             raise e

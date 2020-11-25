@@ -102,6 +102,24 @@ class QDLiga:
             message = input('Welche Nachricht senden?\n')
             self.message_player(p_id, message)
 
+        elif text == '/running':  # Gibt alle noch nicht bestätigten Spiele aus
+            matches = self.get_all_running_matches()
+            print('Liste aller nicht bestätigten Spiele:')
+            print_list = ''
+            for m in matches:
+                # None durch Striche ersetzen
+                if m[9] == 0:
+                    res1 = res2 = pts1 = pts2 = '-'
+                else:
+                    res1 = str(m[5])  # Als String, für schönere Formatierung
+                    res2 = str(m[6])
+                    pts1 = str(m[7])
+                    pts2 = str(m[8])
+                print_list += ('[{}] {:>12} vs. {:12} - Res: {:>2}:{:2} - '
+                               'Pts: {:>2}:{:2} - Verified: {}\n')\
+                    .format(m[0], m[10], m[11], res1, res2, pts1, pts2, m[9])
+            print(print_list)
+
         elif text == '/setresult':  # Trägt ein Ergebnis ein
             m_id = input('Ergebnis welches Duells festlegen?\n'
                          'M_ID eingeben: ')
@@ -181,6 +199,8 @@ class QDLiga:
             print('Folgende Befehle können genutzt werden:\n'
                   '/stop: Die QDLiga und alle zugehörigen Module beenden\n'
                   '/message: Sendet eine Nachricht an einen Spieler\n'
+                  '/running: Gibt eine Liste aller noch nicht bestätigten '
+                  'Spiele aus\n'
                   '/setresult: Das Ergebnis eines Duells festlegen\n'
                   '/rename: Ändert den Nutzernamen eines Spielers\n'
                   '/help: Diese Liste aufrufen\n')
@@ -860,6 +880,12 @@ class QDLiga:
         self.db.rename_user(p_id, new_name)
         self.log.log_info('Name von "{}" (P_ID: {}) in "{}" geändert.'
                           .format(old_name, p_id, new_name))
+
+    def get_all_running_matches(self):
+        """Gibt eine Liste aller Spiele zurück, die noch nicht bestätigt wurden.
+        (Also: Alle Spiele, die noch nicht von beiden Seiten eingetragen und
+        bestätigt worden sind)"""
+        return self.db.get_all_running_matches()
 
 
 if __name__ == "__main__":
