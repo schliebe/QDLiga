@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from PIL import Image, ImageDraw, ImageFont
+import numpy as np
 
 
 class MediaGenerator:
@@ -129,7 +130,7 @@ class MediaGenerator:
 
         self.league['legend'] = legend
 
-        # Farbverlauf erstellen
+        # --- Farbverlauf generieren ---
         # Schwarzes 510x1 Bild generieren
         gold = Image.new('RGBA', (510, 1), (0, 0, 0, 0))
         green = Image.new('RGBA', (510, 1), (0, 0, 0, 0))
@@ -472,6 +473,74 @@ class MediaGenerator:
         draw.line([(10, 4), (1439, 4)], width=4)
         self.result_list['line'] = line
 
+        # --- Farbverlauf-Umrandung generieren ---
+        # Transparenz-Matrix berechnen (350x10, Verlauf von oben nach unten,
+        #  Verlauf 150px von links, Verlauf 100x von rechts)
+
+        # Erste Zeile mit vollen Farben
+        horizontal = np.zeros(350)
+        # Farbverlauf von links
+        step = 255 / 150
+        current = 0
+        for i in range(150):
+            horizontal[i] = np.rint(current)
+            current += step
+        # Kein Farbverlauf in der Mitte
+        horizontal[150:250] = 255
+        # Farbverlauf nach rechts
+        step = 255 / 100
+        current = 255
+        for i in range(100):
+            horizontal[250 + i] = np.rint(current)
+            current -= step
+        horizontal = horizontal.reshape((1, 350))
+
+        # Farbverlauf nach unten
+        vertical = np.zeros(10)
+        for i in range(10):
+            vertical[i] = 1 - (0.1 * i)
+        vertical = vertical.reshape((10, 1))
+
+        # Beide Vektoren zu Matrix multiplizieren
+        transp = np.dot(vertical, horizontal)
+        transp = np.rint(transp)
+
+        # Linke Seite für alle Farben erstellen
+        # Schwarzes 350x40 Bild generieren
+        green_l = Image.new('RGBA', (350, 40), (0, 0, 0, 0))
+        yellow_l = Image.new('RGBA', (350, 40), (0, 0, 0, 0))
+        red_l = Image.new('RGBA', (350, 40), (0, 0, 0, 0))
+        gray_l = Image.new('RGBA', (350, 40), (0, 0, 0, 0))
+
+        # Für Oberseite die Farben mit entsprechender Transparenz setzen
+        for y in range(transp.shape[0]):
+            for x in range(transp.shape[1]):
+                green_l.putpixel((x, y), (0, 255, 0, (int(transp[y, x]))))
+                yellow_l.putpixel((x, y), (255, 216, 0, (int(transp[y, x]))))
+                red_l.putpixel((x, y), (255, 0, 0, (int(transp[y, x]))))
+                gray_l.putpixel((x, y), (192, 192, 192, (int(transp[y, x]))))
+
+        # Oberseite flippen und nach unten kopieren
+        green = green_l.crop((0, 0, 350, 10)).transpose(Image.FLIP_TOP_BOTTOM)
+        green_l.paste(green, (0, 30, 350, 40))
+        yellow = yellow_l.crop((0, 0, 350, 10)).transpose(Image.FLIP_TOP_BOTTOM)
+        yellow_l.paste(yellow, (0, 30, 350, 40))
+        red = red_l.crop((0, 0, 350, 10)).transpose(Image.FLIP_TOP_BOTTOM)
+        red_l.paste(red, (0, 30, 350, 40))
+        gray = gray_l.crop((0, 0, 350, 10)).transpose(Image.FLIP_TOP_BOTTOM)
+        gray_l.paste(gray, (0, 30, 350, 40))
+
+        self.result_list['green_l'] = green_l
+        self.result_list['yellow_l'] = yellow_l
+        self.result_list['red_l'] = red_l
+        self.result_list['gray_l'] = gray_l
+
+        # Umrandung nach rechts spiegeln
+        self.result_list['green_r'] = green_l.transpose(Image.FLIP_LEFT_RIGHT)
+        self.result_list['yellow_r'] = yellow_l.transpose(Image.FLIP_LEFT_RIGHT)
+        self.result_list['red_r'] = red_l.transpose(Image.FLIP_LEFT_RIGHT)
+        self.result_list['gray_r'] = gray_l.transpose(Image.FLIP_LEFT_RIGHT)
+
     def generate_result_list(self, l_id):
         """Generiert Ergebnisliste der übergebenen Liga"""
         # Pixelgenauer Plan in doc/media/Liga_Ergebnisse.pdn
@@ -518,6 +587,27 @@ class MediaGenerator:
             # Schwarzes 700x45 Bild generieren
             entry = Image.new('RGBA', (700, 45), (0, 0, 0))
             draw = ImageDraw.Draw(entry)
+
+            # Hintergrundfarbe
+            if match[6] == 3:
+                # Spieler 1
+                if match[4] == 5:
+                    entry.alpha_composite(self.result_list['green_l'], (0, 0))
+                elif match[4] == 3:
+                    entry.alpha_composite(self.result_list['yellow_l'], (0, 0))
+                elif match[4] == 1:
+                    entry.alpha_composite(self.result_list['red_l'], (0, 0))
+                elif match[4] == 0:
+                    entry.alpha_composite(self.result_list['gray_l'], (0, 0))
+                # Spieler 2
+                if match[5] == 5:
+                    entry.alpha_composite(self.result_list['green_r'], (350, 0))
+                elif match[5] == 3:
+                    entry.alpha_composite(self.result_list['yellow_r'], (350, 0))
+                elif match[5] == 1:
+                    entry.alpha_composite(self.result_list['red_r'], (350, 0))
+                elif match[5] == 0:
+                    entry.alpha_composite(self.result_list['gray_r'], (350, 0))
 
             # Spieler 1, rechtsbündig
             x, _ = draw.textsize(name_left, font=self.font['bs_26'])

@@ -3,6 +3,7 @@ Der MediaGenerator erzeugt Bilder für die QDLiga.\
 Erzeugt werden können:
 - [Liga-Tabelle](#liga-tabelle "Liga-Tabelle")
 - [Statistik-Tabelle](#statistik-tabelle "Statistik-Tabelle")
+- [Ergebnis-Liste](#ergebnis-liste "Ergebnis-Liste")
 
 ---
 ### Liga-Tabelle
@@ -40,6 +41,9 @@ Ein pixelgenauer Plan befindet sich in [Statistik_Tabelle.pdn](media/Statistik_T
 Die Ergebnis-Liste zeigt alle Spiele einer Liga (Hin- und Rückrunde). Das Ergebnis ist nur eingetragen, wenn es von beiden Spielern bestätigt wurde.
 
 ![Beispiel Ergebnis-Liste](media/MediaGenerator_Ergebnisse.png)
+
+Die einzelnen Einträge sind farblich markiert und zeigen an, wie Viele Punkte die Spieler erhalten haben.\
+Es gibt Farben für Sieg (Grün, 5 Punkte), Unentschieden (Gelb, 3 Punkte), Niederlage (Rot, 1 Punkt) und nicht gespielte Duelle (Grau, 0 Punkte).
 
 Ein pixelgenauer Plan befindet sich in [Liga_Ergebnisse.pdn](media/Liga_Ergebnisse.pdn "Liga_Ergebnisse.pdn")
 
