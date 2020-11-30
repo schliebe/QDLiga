@@ -97,10 +97,14 @@ class QDLiga:
             self.stop()
 
         elif text == '/message':  # Sendet eine Nachricht an einen Spieler
-            p_id = input('Nachricht an welchen Spieler?\n'
-                         'P_ID eingeben: ')
-            message = input('Welche Nachricht senden?\n')
-            self.message_player(p_id, message)
+            username = input('Nachricht an wen?\n'
+                             'Nutzername eingeben: ')
+            p_id = self.get_p_id(username)
+            if p_id:
+                message = input('Welche Nachricht senden?\n')
+                self.message_player(p_id, message)
+            else:
+                print('Nutzer konnte nicht gefunden werden')
 
         elif text == '/running':  # Gibt alle noch nicht bestätigten Spiele aus
             matches = self.get_all_running_matches()
