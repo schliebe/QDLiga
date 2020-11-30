@@ -627,10 +627,12 @@ class TelegramBot:
 
         if message == 'Tabelle':
             # Tabelle zurück schicken
+            update.message.reply_text('Bitte warten...')
             image = self.parent.generate_league_table(l_id)
             self.send_image(chat_id, image)
         elif message == 'Ergebnisse':
             # Ergebnissliste zurück schicken
+            update.message.reply_text('Bitte warten...')
             image = self.parent.generate_result_list(l_id)
             self.send_image(chat_id, image)
 
@@ -660,9 +662,11 @@ class TelegramBot:
                 'sehen!\n'
                 'Du kannst dich dazu im Account-Menü registrieren.',
                 reply_markup=ReplyKeyboardMarkup(self.keyboards['statistics']))
+            update.message.reply_text('Bitte warten...')
             image = self.parent.generate_statistics_table(None)
             self.send_image(chat_id, image)
         else:
+            update.message.reply_text('Bitte warten...')
             image = self.parent.generate_statistics_table(p_id)
             self.send_image(chat_id, image)
         self.mainmenu(update, context)
