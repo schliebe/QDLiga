@@ -395,6 +395,7 @@ class QDLiga:
                 player_info[p[0]] = {}
                 player_info[p[0]]['last_league'] = leagues[l][0]
                 player_info[p[0]]['last_level'] = leagues[l][2]
+                player_info[p[0]]['last_place'] = players.index(p) + 1
                 if status[p[0]] == 0:
                     # Wenn Status = 0, wird der aktuelle Eintrag zur Löschliste
                     # hinzugefügt
@@ -416,8 +417,8 @@ class QDLiga:
                 # TODO Eventuell anpassen für mehr als 8 Spieler pro Liga
                 swap_down_1 = top[6]  # Höhere Liga, Platz 7
                 swap_down_2 = top[7]  # Höhere Liga, Platz 8
-                swap_up_1 = bot[0]   # Tiefere Liga, Platz 1
-                swap_up_2 = bot[1]   # Tiefere Liga, Platz 2
+                swap_up_1 = bot[0]  # Tiefere Liga, Platz 1
+                swap_up_2 = bot[1]  # Tiefere Liga, Platz 2
                 # Spieler aus alten Ligen entfernen
                 new_leagues[l][1].remove(swap_down_1)
                 new_leagues[l][1].remove(swap_down_2)
@@ -442,6 +443,7 @@ class QDLiga:
             player_info[p] = {}
             player_info[p]['last_league'] = 0
             player_info[p]['last_level'] = 0
+            player_info[p]['last_place'] = 0
         single_list.extend(queue)
 
         # Einteilung in neue Ligen von oben nach unten in 8er Gruppen
@@ -490,6 +492,7 @@ class QDLiga:
         # Spieler benachrichtigen
         league_names[0] = 'Warteliste'
         for p in player_info:
+            place = player_info[p]['last_place']
             last = player_info[p]['last_level']
             next = player_info[p]['next_level']
             last_name = league_names[player_info[p]['last_league']]
@@ -497,6 +500,18 @@ class QDLiga:
                 next_name = None
             else:
                 next_name = league_names[player_info[p]['next_league']]
+
+            # Ergebnis mitteilen, wenn Spieler letzte Runde gespielt hat
+            if place != 0:
+                # Wenn Sieger von Liga 1, spezielle Nachricht
+                if last == 1 and place == 1:
+                    text_place = ('Du bist der Sieger von {}. '
+                                  'Herzlichen Glückwunsch!'.format(last_name))
+                else:
+                    text_place = ('Du hast {} auf dem {}. Platz abgeschlossen!'
+                                  .format(last_name, place))
+            else:
+                text_place = None
 
             # Spieler spielt nächste Saison nicht mehr
             if next is None:
@@ -535,6 +550,10 @@ class QDLiga:
                     self.log.log_error('p:', p)
                     self.log.log_error('player_info', player_info)
                     continue
+            # Wenn gespielt, Ergebnis an Spieler senden
+            if text_place:
+                self.message_player(p, text_place)
+            # Auf- und Abstiegsmeldungen senden
             self.message_player(p, text)
         self.log.log_info('Regroup beendet')
 
