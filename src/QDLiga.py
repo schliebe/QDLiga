@@ -267,9 +267,12 @@ class QDLiga:
 
     def register_new_player(self, username):
         """Fügt einen neuen Spieler der Datenbank hinzu und gibt dessen P_ID
-        zurück"""
+        zurück. Der Spieler wird der Warteliste hinzugefügt"""
         try:
             p_id = self.db.insert_player(username)
+            in_queue = self.db.is_in_queue(p_id)
+            if not in_queue:
+                self.db.add_to_queue(p_id)
             return p_id
         except BaseException as e:
             raise e
