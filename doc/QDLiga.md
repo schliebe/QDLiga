@@ -5,11 +5,19 @@ Es ist möglich in der Konsole Befehle einzugeben
 
 ---
 ### Verbundene Module:
+- [Logger](Logger.md "Logger")
 - [Datenbank](Datenbank.md "Datenbank")
 - [TelegramBot](TelegramBot.md "TelegramBot")
+- [EventTimer](EventTimer.md "EventTimer")
+- [MediaGenerator](MediaGenerator.md "MediaGenerator")
 
 ---
 ### Befehle:
-- /stop - Beendet die QDLiga und alle damit verbundenen Module
+- /stop - Die QDLiga und alle zugehörigen Module beenden
+- /message - Sendet eine Nachricht an einen Spieler
+- /running - Gibt eine Liste aller noch nicht bestätigten Spiele aus
+- /setresult - Das Ergebnis eines Duells festlegen
+- /rename - Ändert den Nutzernamen eines Spielers
+- /help - Die Befehlsliste aufrufen
 
 ---
