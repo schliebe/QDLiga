@@ -870,7 +870,7 @@ class QDLiga:
                     os.remove('../match_data/{}'.format(data))
         self.log.log_info('Nicht benötigte Match Data gelöscht.')
 
-    def daily_reminder(self):
+    def daily_reminder(self, weekday):
         # Jeder Spieler, der noch ein Duell bestätigen muss erhällt eine kurze
         # Benachrichtigung
         # TODO überprüfen, ob offene Support-Tickets (sobald vorhanden)
@@ -889,6 +889,28 @@ class QDLiga:
                                       'Du hast noch nicht alle Ergebnisse '
                                       'bestätigt, die von deinen Gegnern '
                                       'eingetragen wurden!')
+
+        # Alle Spieler, die ihre Spiele noch nicht gespielt haben erhalten
+        # Samstag und Sonntag vor Ablauf der Zeit eine Benachrichtigung
+        # TODO Erwähnen, was zu tun ist, falls die Zeit abgelaufen ist
+        text = None
+        if weekday == 5:  # Samstag
+            text = ('Erinnerung: Du hast nur noch bis Morgen Abend Zeit um '
+                    'deine restlichen Duelle zu spielen!')
+        elif weekday == 6:  # Sonntag
+            text = ('Erinnerung: Du hast nur noch bis Heute Abend Zeit um '
+                    'deine restlichen Duelle zu spielen!\n'
+                    'Für nicht gespielte Spiele erhältst du keine Punkte!')
+        if text:
+            matches = self.get_all_running_matches()
+            notify_list = set()
+            for m in matches:
+                if self.round == m[2] and m[9] == 0:
+                    notify_list.add(m[3])
+                    notify_list.add(m[4])
+
+            for p_id in notify_list:
+                self.message_player(p_id, text)
 
     def get_league_matches(self, l_id, include_names=False):
         if include_names:

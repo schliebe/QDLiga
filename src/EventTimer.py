@@ -187,8 +187,13 @@ class EventTimer:
         while self.running:
             # Löse das tägliche Event jeden Tag zum selben Zeitpunkt aus
             self.current_daily = self.scheduler_daily.enterabs(
-                daily_timestamp.timestamp(), 0, self.parent.daily_reminder)
+                daily_timestamp.timestamp(), 0, self.execute_daily)
             self.scheduler_daily.run()
             # Setze neuen Timestamp auf die gleiche Zeit am folgenden Tag
             daily_timestamp = self.add_time_offset(
                 daily_timestamp, datetime.timedelta(days=1))
+
+    def execute_daily(self):
+        """Das tägliche Event, dass ausgelöst wird"""
+        weekday = datetime.date.today().weekday()  # 0 (Mo) - 6 (So)
+        self.parent.daily_reminder(weekday)
