@@ -10,7 +10,6 @@ Für den TelegramBot wird die [Bibliothek](Bibliotheken.md "Bibliotheken") [pyth
 ---
 ### Befehle:
 - /cancel - Vorgang abbrechen
-- /support - Dem support eine Nachricht senden
-- /register - Für die QDLiga registrieren
+- /tutorial - Tutorial anzeigen
 
 ---
